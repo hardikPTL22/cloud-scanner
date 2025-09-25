@@ -1,0 +1,18 @@
+services:
+  python-app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cloud-scanner-backend
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  vite-react-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cloud-scanner-frontend
+    ports:
+      - "4000:80"
+    restart: unless-stopped

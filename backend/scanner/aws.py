@@ -1,27 +1,16 @@
-import boto3
 import json
 from botocore.exceptions import ClientError
 
-
-def _s3_client(region_name=None):
-    return (
-        boto3.client("s3", region_name=region_name)
-        if region_name
-        else boto3.client("s3")
-    )
-
-
-def find_public_s3_buckets_by_acl():
-    s3 = _s3_client()
+def find_public_s3_buckets_by_acl(s3_client):
     try:
-        bucket_list = s3.list_buckets()
+        bucket_list = s3_client.list_buckets()
     except Exception:
         return []
     public_buckets_acl = []
     for bucket in bucket_list.get("Buckets", []):
         bucket_name = bucket["Name"]
         try:
-            acl = s3.get_bucket_acl(Bucket=bucket_name)
+            acl = s3_client.get_bucket_acl(Bucket=bucket_name)
             for grant in acl.get("Grants", []):
                 grantee = grant.get("Grantee", {})
                 if grantee.get("URI") in [
@@ -37,17 +26,16 @@ def find_public_s3_buckets_by_acl():
     return public_buckets_acl
 
 
-def find_public_s3_buckets_by_policy():
-    s3 = _s3_client()
+def find_public_s3_buckets_by_policy(s3_client):
     try:
-        bucket_list = s3.list_buckets()
+        bucket_list = s3_client.list_buckets()
     except Exception:
         return []
     public_buckets_policy = []
     for bucket in bucket_list.get("Buckets", []):
         bucket_name = bucket["Name"]
         try:
-            policy = s3.get_bucket_policy(Bucket=bucket_name)
+            policy = s3_client.get_bucket_policy(Bucket=bucket_name)
             policy_dict = json.loads(policy["Policy"])
             for statement in policy_dict.get("Statement", []):
                 if statement.get("Effect") == "Allow" and (
@@ -65,7 +53,7 @@ def find_public_s3_buckets_by_policy():
                             if resource.endswith("/*") and bucket_name in resource:
                                 public_buckets_policy.append(bucket_name)
                                 break
-        except s3.exceptions.NoSuchBucketPolicy:
+        except s3_client.exceptions.NoSuchBucketPolicy:
             continue
         except ClientError:
             continue
@@ -74,28 +62,27 @@ def find_public_s3_buckets_by_policy():
     return public_buckets_policy
 
 
-def find_public_s3_buckets():
-    acl_buckets = find_public_s3_buckets_by_acl()
-    policy_buckets = find_public_s3_buckets_by_policy()
+def find_public_s3_buckets(s3_client):
+    acl_buckets = find_public_s3_buckets_by_acl(s3_client)
+    policy_buckets = find_public_s3_buckets_by_policy(s3_client)
     combined = list(set(acl_buckets + policy_buckets))
     return combined
 
 
-def find_unencrypted_s3_buckets():
+def find_unencrypted_s3_buckets(s3_client):
     """
     Return list of bucket names that do NOT have default bucket encryption configured.
     (Note: objects can still be encrypted individually; this checks bucket default encryption)
     """
-    s3 = _s3_client()
     try:
-        bucket_list = s3.list_buckets()
+        bucket_list = s3_client.list_buckets()
     except Exception:
         return []
     unencrypted = []
     for bucket in bucket_list.get("Buckets", []):
         name = bucket["Name"]
         try:
-            s3.get_bucket_encryption(Bucket=name)
+            s3_client.get_bucket_encryption(Bucket=name)
 
         except ClientError as e:
             code = e.response.get("Error", {}).get("Code", "")
@@ -118,16 +105,15 @@ def find_unencrypted_s3_buckets():
     return unencrypted
 
 
-def find_over_permissive_iam_policies():
-    iam = boto3.client("iam")
+def find_over_permissive_iam_policies(iam_client):
     over_permissive_policies = []
 
-    paginator = iam.get_paginator("list_policies")
+    paginator = iam_client.get_paginator("list_policies")
     for page in paginator.paginate(Scope="Local"):
         for policy in page.get("Policies", []):
             policy_arn = policy["Arn"]
             try:
-                versions = iam.list_policy_versions(PolicyArn=policy_arn)
+                versions = iam_client.list_policy_versions(PolicyArn=policy_arn)
                 default_version = next(
                     (
                         v
@@ -137,7 +123,7 @@ def find_over_permissive_iam_policies():
                     None,
                 )
                 if default_version:
-                    version_info = iam.get_policy_version(
+                    version_info = iam_client.get_policy_version(
                         PolicyArn=policy_arn, VersionId=default_version["VersionId"]
                     )
                     document = version_info["PolicyVersion"]["Document"]
@@ -161,11 +147,10 @@ def find_over_permissive_iam_policies():
     return over_permissive_policies
 
 
-def find_open_security_groups():
-    ec2 = boto3.client("ec2")
+def find_open_security_groups(ec2_client):
     open_groups = []
     try:
-        response = ec2.describe_security_groups()
+        response = ec2_client.describe_security_groups()
     except Exception:
         return []
     for sg in response.get("SecurityGroups", []):
@@ -183,23 +168,22 @@ def find_open_security_groups():
     return list(set(open_groups))
 
 
-def find_cloudtrail_not_logging():
+def find_cloudtrail_not_logging(cloudtrail_client):
     """
     Returns list of trail names that are present but not currently logging.
     """
-    ct = boto3.client("cloudtrail")
     not_logging = []
     try:
-        trails_resp = ct.describe_trails(includeShadowTrails=False)
+        trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
     except Exception:
         return []
     for t in trails_resp.get("trailList", []):
         name = t.get("Name") or t.get("TrailARN")
         try:
             status = (
-                ct.get_trail_status(Name=t.get("Name"))
+                cloudtrail_client.get_trail_status(Name=t.get("Name"))
                 if t.get("Name")
-                else ct.get_trail_status(TrailNameList=[t.get("TrailARN")])
+                else cloudtrail_client.get_trail_status(TrailNameList=[t.get("TrailARN")])
             )
 
             is_logging = status.get("IsLogging")

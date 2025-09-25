@@ -19,7 +19,7 @@ export function CredentialsDialog({ open, onOpenChange }: CredentialsDialogProps
   const [formData, setFormData] = useState<AWSCredentials>({
     accessKey: credentials?.accessKey ?? '',
     secretKey: credentials?.secretKey ?? '',
-    region: credentials?.region ?? '',
+    region: credentials?.region ?? 'us-east-1',
   });
   const setCredentials = useAWSStore((state) => state.setCredentials);
   const [validating, setValidating] = useState(false);

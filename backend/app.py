@@ -32,10 +32,10 @@ SEVERITY = {
 }
 
 
-def run_scans(file_path=None):
+def run_scans(s3_client, iam_client, ec2_client, cloudtrail_client, file_path=None):
     findings = []
 
-    public_buckets = find_public_s3_buckets()
+    public_buckets = find_public_s3_buckets(s3_client)
     for b in public_buckets:
         findings.append(
             {
@@ -46,7 +46,7 @@ def run_scans(file_path=None):
             }
         )
 
-    unenc = find_unencrypted_s3_buckets()
+    unenc = find_unencrypted_s3_buckets(s3_client)
     for b in unenc:
         findings.append(
             {
@@ -57,7 +57,7 @@ def run_scans(file_path=None):
             }
         )
 
-    permissive_policies = find_over_permissive_iam_policies()
+    permissive_policies = find_over_permissive_iam_policies(iam_client)
     for p in permissive_policies:
         findings.append(
             {
@@ -68,7 +68,7 @@ def run_scans(file_path=None):
             }
         )
 
-    open_groups = find_open_security_groups()
+    open_groups = find_open_security_groups(ec2_client)
     for g in open_groups:
         findings.append(
             {
@@ -79,7 +79,7 @@ def run_scans(file_path=None):
             }
         )
 
-    ct_not_logging = find_cloudtrail_not_logging()
+    ct_not_logging = find_cloudtrail_not_logging(cloudtrail_client)
     for t in ct_not_logging:
         findings.append(
             {
@@ -117,6 +117,8 @@ def run_scans(file_path=None):
 
 @app.before_request
 def middleware():
+    if request.method == "OPTIONS":
+        return  # Skip preflight requests
     try:
         access_key = request.headers.get("X-AWS-Access-Key")
         secret_key = request.headers.get("X-AWS-Secret-Key")
@@ -129,7 +131,11 @@ def middleware():
         )
         sts_client = session.client("sts")
         sts_client.get_caller_identity()  # Validate credentials
+
         g.s3_client = session.client("s3")
+        g.access_key = access_key
+        g.secret_key = secret_key
+        g.region = region
     except Exception as e:
         print(f"Error in middleware: {e}")  # Debug print
         return jsonify({"error": f"Invalid AWS credentials"}), 401
@@ -151,7 +157,15 @@ def scan():
         filepath = None
         print("No file uploaded, running cloud scans only.")  # Debug print
 
-    findings = run_scans(file_path=filepath)
+    session = boto3.Session(
+        aws_access_key_id=g.access_key,
+        aws_secret_access_key=g.secret_key,
+        region_name=g.region,
+    )
+    iam_client = session.client("iam")
+    ec2_client = session.client("ec2")
+    cloudtrail_client = session.client("cloudtrail")
+    findings = run_scans(g.s3_client, iam_client, ec2_client, cloudtrail_client, file_path=filepath)
     print(f"Returning findings: {findings}")  # Debug print
 
     return jsonify({"findings": findings})
@@ -204,4 +218,4 @@ def validate_credentials():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
