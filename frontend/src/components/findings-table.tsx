@@ -5,9 +5,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import type { Finding } from '@/types';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import type { Finding } from "@/types";
 
 interface FindingsTableProps {
   findings: Finding[];
@@ -15,14 +15,14 @@ interface FindingsTableProps {
 
 const getSeverityColor = (severity: string) => {
   switch (severity) {
-    case 'High':
-      return 'destructive';
-    case 'Medium':
-      return 'default';
-    case 'Low':
-      return 'secondary';
+    case "High":
+      return "destructive";
+    case "Medium":
+      return "default";
+    case "Low":
+      return "secondary";
     default:
-      return 'default';
+      return "default";
   }
 };
 

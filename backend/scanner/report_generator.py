@@ -1,5 +1,4 @@
 import os
-import csv
 import json
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
@@ -57,15 +56,6 @@ def _render_mitre_pdf(c, x, y, key):
 
 
 def print_report(findings):
-    """
-    findings: list of dicts:
-        {
-            "type": "public_s3_bucket",
-            "name": "bucket-name",
-            "severity": "High",
-            "details": "...",
-        }
-    """
     print("\n==== Cloud Security Misconfiguration Report ====\n")
     if not findings:
         print("No issues detected.")
@@ -136,7 +126,6 @@ def generate_pdf_report(findings, report_folder="report"):
         c.drawString(60, y, f"Severity: {f.get('severity','Unknown')}")
         y -= 14
         if f.get("details"):
-
             text = f"Details: {f.get('details')}"
             words = text.split()
             line = ""
@@ -204,6 +193,7 @@ def write_json(findings, report_folder="report"):
 
 
 def write_csv(findings, report_folder="report"):
+    import csv
     report_folder = os.path.join(
         report_folder,
         f'cloud_security_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}',

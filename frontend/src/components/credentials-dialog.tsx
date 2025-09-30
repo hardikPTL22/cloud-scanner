@@ -1,25 +1,33 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAWSStore } from '@/store/aws-store';
-import type { AWSCredentials } from '@/types';
-import { toast } from 'sonner';
-import { apiService } from '@/services/api';
-import { Loader2 } from 'lucide-react';
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAWSStore } from "@/store/aws-store";
+import type { AWSCredentials } from "@/types";
+import { toast } from "sonner";
+import { apiService } from "@/services/api";
+import { Loader2 } from "lucide-react";
 
 interface CredentialsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function CredentialsDialog({ open, onOpenChange }: CredentialsDialogProps) {
+export function CredentialsDialog({
+  open,
+  onOpenChange,
+}: CredentialsDialogProps) {
   const credentials = useAWSStore((state) => state.credentials);
   const [formData, setFormData] = useState<AWSCredentials>({
-    accessKey: credentials?.accessKey ?? '',
-    secretKey: credentials?.secretKey ?? '',
-    region: credentials?.region ?? 'us-east-1',
+    accessKey: credentials?.accessKey ?? "",
+    secretKey: credentials?.secretKey ?? "",
+    region: credentials?.region ?? "us-east-1",
   });
   const setCredentials = useAWSStore((state) => state.setCredentials);
   const [validating, setValidating] = useState(false);
@@ -29,27 +37,31 @@ export function CredentialsDialog({ open, onOpenChange }: CredentialsDialogProps
     try {
       setValidating(true);
       if (formData.accessKey && formData.secretKey && formData.region) {
-        const res = await apiService.validateCredentials({ accessKey: formData.accessKey, secretKey: formData.secretKey, region: formData.region })
+        const res = await apiService.validateCredentials({
+          accessKey: formData.accessKey,
+          secretKey: formData.secretKey,
+          region: formData.region,
+        });
         if (res) {
           setCredentials(formData);
           onOpenChange(false);
         } else {
-          toast.error('Invalid AWS Credentials.');
+          toast.error("Invalid AWS Credentials.");
         }
       }
     } catch (error) {
-      console.error('Could not validate AWS Credentials', error);
-      toast.error('Could not validate AWS Credentials.');
+      console.error("Could not validate AWS Credentials", error);
+      toast.error("Could not validate AWS Credentials.");
     } finally {
       setValidating(false);
     }
   };
 
-  const handleInputChange = (field: keyof AWSCredentials) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
-  };
+  const handleInputChange =
+    (field: keyof AWSCredentials) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+    };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,7 +76,7 @@ export function CredentialsDialog({ open, onOpenChange }: CredentialsDialogProps
               id="accessKey"
               type="text"
               value={formData.accessKey}
-              onChange={handleInputChange('accessKey')}
+              onChange={handleInputChange("accessKey")}
               placeholder="AKIA..."
               required
             />
@@ -75,7 +87,7 @@ export function CredentialsDialog({ open, onOpenChange }: CredentialsDialogProps
               id="secretKey"
               type="password"
               value={formData.secretKey}
-              onChange={handleInputChange('secretKey')}
+              onChange={handleInputChange("secretKey")}
               placeholder="Enter secret key"
               required
             />
@@ -86,16 +98,20 @@ export function CredentialsDialog({ open, onOpenChange }: CredentialsDialogProps
               id="region"
               type="text"
               value={formData.region}
-              onChange={handleInputChange('region')}
+              onChange={handleInputChange("region")}
               placeholder="us-east-1"
               required
             />
           </div>
           <Button type="submit" className="w-full" disabled={validating}>
-            {validating ? <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Validating Credentials...
-            </> : "Save Credentials"}
+            {validating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Validating Credentials...
+              </>
+            ) : (
+              "Save Credentials"
+            )}
           </Button>
         </form>
       </DialogContent>

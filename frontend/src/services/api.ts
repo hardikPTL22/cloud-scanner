@@ -50,8 +50,9 @@ export const apiService = {
     return data.files;
   },
 
-  async scan(credentials: AWSCredentials, bucket?: string, file?: string): Promise<ScanResponse> {
+  async scan(credentials: AWSCredentials, services: string[], bucket?: string, file?: string): Promise<ScanResponse> {
     const body: any = {};
+    body.services = services;
     if (bucket) body.bucket = bucket;
     if (file) body.file = file;
 

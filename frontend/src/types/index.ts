@@ -15,6 +15,13 @@ export interface ScanResponse {
   findings: Finding[];
 }
 
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+}
+
 export interface BucketsResponse {
   buckets: string[];
 }

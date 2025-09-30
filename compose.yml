@@ -14,5 +14,5 @@ services:
       dockerfile: Dockerfile
     container_name: cloud-scanner-frontend
     ports:
-      - "4000:80"
+      - "5173:80"
     restart: unless-stopped

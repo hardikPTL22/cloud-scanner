@@ -1,5 +1,35 @@
+from enum import Enum
+
+
+class Vulnerability(str, Enum):
+    public_s3_bucket = "public_s3_bucket"
+    unencrypted_s3_bucket = "unencrypted_s3_bucket"
+    s3_bucket_versioning_disabled = "s3_bucket_versioning_disabled"
+    s3_bucket_logging_disabled = "s3_bucket_logging_disabled"
+    s3_bucket_block_public_access_disabled = "s3_bucket_block_public_access_disabled"
+    over_permissive_iam = "over_permissive_iam"
+    iam_user_no_mfa = "iam_user_no_mfa"
+    iam_unused_access_key = "iam_unused_access_key"
+    iam_inline_policy = "iam_inline_policy"
+    iam_root_access_key = "iam_root_access_key"
+    open_security_group_ingress = "open_security_group_ingress"
+    open_security_group_egress = "open_security_group_egress"
+    unused_security_group = "unused_security_group"
+    cloudtrail_not_logging = "cloudtrail_not_logging"
+    cloudtrail_not_multi_region = "cloudtrail_not_multi_region"
+    cloudtrail_no_log_file_validation = "cloudtrail_no_log_file_validation"
+    cloudtrail_bucket_public = "cloudtrail_bucket_public"
+    guardduty_disabled = "guardduty_disabled"
+    vpc_flow_logs_disabled = "vpc_flow_logs_disabled"
+    ebs_volume_unencrypted = "ebs_volume_unencrypted"
+    rds_instance_unencrypted = "rds_instance_unencrypted"
+    ssm_parameter_unencrypted = "ssm_parameter_unencrypted"
+    lambda_overpermissive_role = "lambda_overpermissive_role"
+    apigateway_open_resource = "apigateway_open_resource"
+
+
 MITRE_MAP = {
-    "public_s3_bucket": {
+    Vulnerability.public_s3_bucket: {
         "techniques": [
             {
                 "id": "T1530",
@@ -10,7 +40,61 @@ MITRE_MAP = {
         ],
         "note": "Public S3 buckets may allow anyone to list or download objects.",
     },
-    "over_permissive_iam": {
+    Vulnerability.s3_bucket_versioning_disabled: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "Lack of versioning might result in data loss or inability to recover from accidental deletion or ransomware.",
+                "remediation": "Enable bucket versioning to preserve, retrieve, and restore every version of every object in a bucket.",
+            }
+        ],
+        "note": "Versioning improves data durability and recovery options.",
+    },
+    Vulnerability.unencrypted_s3_bucket: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": (
+                    "Adversaries may access or exfiltrate data from cloud storage if "
+                    "S3 buckets or objects are not encrypted at rest. Lack of "
+                    "server-side encryption increases the risk of data exposure if "
+                    "credentials are compromised or the storage is accessed "
+                    "without authorization."
+                ),
+                "remediation": (
+                    "Enable default bucket encryption (SSE-S3 or SSE-KMS) for all "
+                    "S3 buckets, enforce TLS for data in transit, and restrict "
+                    "access with IAM and bucket policies."
+                ),
+            }
+        ],
+        "note": "Encryption at rest protects S3 data from unauthorized access even if the storage layer is compromised.",
+    },
+    Vulnerability.s3_bucket_logging_disabled: {
+        "techniques": [
+            {
+                "id": "T1078",
+                "name": "Valid Accounts",
+                "desc": "Missing access logging reduces visibility into bucket access, delaying detection of unauthorized usage.",
+                "remediation": "Enable S3 access logging.",
+            }
+        ],
+        "note": "Access logs improve forensics and monitoring.",
+    },
+    Vulnerability.s3_bucket_block_public_access_disabled: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "Block Public Access settings disabled can allow unintended public access to buckets.",
+                "remediation": "Enable and enforce Block Public Access settings account-wide or per bucket.",
+            }
+        ],
+        "note": "Block Public Access prevents accidental exposure.",
+    },
+    Vulnerability.over_permissive_iam: {
         "techniques": [
             {
                 "id": "T1098.003",
@@ -27,48 +111,249 @@ MITRE_MAP = {
         ],
         "note": "Policies with Action or Resource set to '*' are high risk.",
     },
-    "open_security_group": {
+    Vulnerability.iam_user_no_mfa: {
+        "techniques": [
+            {
+                "id": "T1098.003",
+                "name": "Account Manipulation",
+                "desc": "Users without MFA are more vulnerable to credential compromise.",
+                "remediation": "Require and enforce MFA for all users.",
+            }
+        ],
+        "note": "MFA is critical for protecting account access.",
+    },
+    Vulnerability.iam_unused_access_key: {
+        "techniques": [
+            {
+                "id": "T1078.004",
+                "name": "Valid Accounts",
+                "desc": "Unused credentials may be forgotten but can be used by attackers if compromised.",
+                "remediation": "Rotate or disable unused access keys regularly.",
+            }
+        ],
+        "note": "Managing credential lifecycle is good hygiene.",
+    },
+    Vulnerability.iam_inline_policy: {
+        "techniques": [
+            {
+                "id": "T1078",
+                "name": "Valid Accounts",
+                "desc": "Inline policies complicate management and increase attack surface.",
+                "remediation": "Use managed policies to improve visibility and control.",
+            }
+        ],
+        "note": "Inline policies are harder to audit and control.",
+    },
+    Vulnerability.iam_root_access_key: {
+        "techniques": [
+            {
+                "id": "T1098",
+                "name": "Account Manipulation",
+                "desc": "Root access keys pose extremely high risk if compromised.",
+                "remediation": "Avoid using root keys; remove root access keys if possible; secure root account with MFA and strong credentials.",
+            }
+        ],
+        "note": "Root credentials should be tightly controlled.",
+    },
+    Vulnerability.open_security_group_ingress: {
         "techniques": [
             {
                 "id": "T1190",
                 "name": "Exploit Public-Facing Application / Exposed Services",
-                "desc": "Security groups that permit 0.0.0.0/0 increase exposure and can allow attackers access to services like SSH/RDP.",
-                "remediation": "Restrict ingress to known IPs/ranges, use bastion hosts, remove 0.0.0.0/0 for management ports, enable VPC flow logs.",
+                "desc": "Security groups with wide ingress exposure increase risk.",
+                "remediation": "Limit ingress rules to known IPs where possible, avoid open 0.0.0.0/0.",
             }
         ],
-        "note": "Open ingress widens the attack surface and can enable lateral movement or direct compromise.",
+        "note": "Open ingress rules increase attack surface.",
     },
-    "unencrypted_s3_bucket": {
+    Vulnerability.open_security_group_egress: {
         "techniques": [
             {
-                "id": "T1530",
-                "name": "Data from Cloud Storage",
-                "desc": "Objects stored without encryption may be accessed and read if other protections are absent.",
-                "remediation": "Enable default bucket encryption (SSE-S3 or SSE-KMS), apply encryption at rest policies, and enforce via AWS Config/CIS.",
+                "id": "T1190",
+                "name": "Exploit Public-Facing Application / Exposed Services",
+                "desc": "Open egress may allow data exfiltration or unwanted outbound traffic.",
+                "remediation": "Restrict egress rules tightly.",
             }
         ],
-        "note": "Missing default encryption increases risk if the bucket becomes exposed.",
+        "note": "Open egress rules can facilitate exfiltration.",
     },
-    "cloudtrail_not_logging": {
+    Vulnerability.unused_security_group: {
+        "techniques": [
+            {
+                "id": "T1070",
+                "name": "Indicator Removal on Host",
+                "desc": "Unused security groups increase attack surface and complicate management.",
+                "remediation": "Remove or audit unused security groups regularly.",
+            }
+        ],
+        "note": "Clean up unused resources for security hygiene.",
+    },
+    Vulnerability.cloudtrail_not_logging: {
         "techniques": [
             {
                 "id": "T1078",
                 "name": "Valid Accounts / Cloud Log Tampering",
                 "desc": "If CloudTrail is not logging, it becomes harder to detect abuse or suspicious API activity.",
-                "remediation": "Enable CloudTrail across regions, ensure trails are multi-region and logging, enable log file validation and delivery to a secure S3 bucket.",
+                "remediation": "Enable CloudTrail across all regions, ensure logging is active.",
             }
         ],
-        "note": "CloudTrail should be enabled and logging to detect suspicious activity.",
+        "note": "CloudTrail logging is critical for detection.",
     },
-    "file_scan": {
+    Vulnerability.cloudtrail_not_multi_region: {
         "techniques": [
             {
-                "id": "T1065",
-                "name": "Indicator Removal on Host",
-                "desc": "Malware files may be introduced and hidden on hosts via uploads.",
-                "remediation": "Perform malware scanning on all uploaded files, block infected files.",
+                "id": "T1078",
+                "name": "Valid Accounts / Cloud Log Tampering",
+                "desc": "CloudTrail should be multi-region to cover all API activity.",
+                "remediation": "Enable multi-region CloudTrail.",
             }
         ],
-        "note": "Scan uploaded files to prevent malware introduction to the environment.",
+        "note": "Multi-region improves visibility and security.",
     },
+    Vulnerability.cloudtrail_no_log_file_validation: {
+        "techniques": [
+            {
+                "id": "T1078",
+                "name": "Valid Accounts / Cloud Log Tampering",
+                "desc": "Log file validation prevents tampering with CloudTrail logs.",
+                "remediation": "Enable log file validation for integrity checks.",
+            }
+        ],
+        "note": "Enables trustworthiness of logs.",
+    },
+    Vulnerability.cloudtrail_bucket_public: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "CloudTrail logs stored in publicly accessible buckets risk exposure.",
+                "remediation": "Ensure S3 buckets storing logs are not public.",
+            }
+        ],
+        "note": "Secure CloudTrail buckets against public access.",
+    },
+    Vulnerability.guardduty_disabled: {
+        "techniques": [
+            {
+                "id": "T1064",
+                "name": "Security Monitoring",
+                "desc": "GuardDuty provides intelligent threat detection.",
+                "remediation": "Enable GuardDuty on all supported regions and accounts.",
+            }
+        ],
+        "note": "GuardDuty helps detect threats early.",
+    },
+    Vulnerability.vpc_flow_logs_disabled: {
+        "techniques": [
+            {
+                "id": "T1078",
+                "name": "Valid Accounts / Network Monitoring",
+                "desc": "VPC Flow Logs capture network traffic metadata.",
+                "remediation": "Enable flow logs for all VPCs.",
+            }
+        ],
+        "note": "Flow logs help detect malicious network activity.",
+    },
+    Vulnerability.ebs_volume_unencrypted: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "Unencrypted EBS volumes risk data exposure if compromised.",
+                "remediation": "Enable encryption for all EBS volumes.",
+            }
+        ],
+        "note": "Encryption protects data at rest.",
+    },
+    Vulnerability.rds_instance_unencrypted: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "Unencrypted RDS instances risk data exposure if compromised.",
+                "remediation": "Enable encryption for all RDS storage.",
+            }
+        ],
+        "note": "Encryption protects database storage.",
+    },
+    Vulnerability.ssm_parameter_unencrypted: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "Unencrypted SSM parameters may expose sensitive data.",
+                "remediation": "Encrypt parameters and restrict access.",
+            }
+        ],
+        "note": "Encrypt sensitive parameters in SSM.",
+    },
+    Vulnerability.lambda_overpermissive_role: {
+        "techniques": [
+            {
+                "id": "T1098.003",
+                "name": "Account Manipulation (Cloud Roles/Permissions)",
+                "desc": "Lambda functions with overly permissive roles can be exploited.",
+                "remediation": "Apply least privilege roles to Lambda functions.",
+            }
+        ],
+        "note": "Least privilege limits function access.",
+    },
+    Vulnerability.apigateway_open_resource: {
+        "techniques": [
+            {
+                "id": "T1190",
+                "name": "Exploit Public-Facing Application / Exposed Services",
+                "desc": "API Gateway endpoints without authorization allow open access.",
+                "remediation": "Require authentication and authorization for all endpoints.",
+            }
+        ],
+        "note": "Open APIs risk unauthorized access.",
+    },
+}
+
+RESOURCES_MAP = {
+    "s3": [
+        Vulnerability.public_s3_bucket,
+        Vulnerability.s3_bucket_versioning_disabled,
+        Vulnerability.s3_bucket_logging_disabled,
+        Vulnerability.s3_bucket_block_public_access_disabled,
+        Vulnerability.unencrypted_s3_bucket,
+        Vulnerability.vpc_flow_logs_disabled,
+    ],
+    "iam": [
+        Vulnerability.over_permissive_iam,
+        Vulnerability.iam_user_no_mfa,
+        Vulnerability.iam_unused_access_key,
+        Vulnerability.iam_inline_policy,
+        Vulnerability.iam_root_access_key,
+    ],
+    "ec2": [
+        Vulnerability.open_security_group_ingress,
+        Vulnerability.open_security_group_egress,
+        Vulnerability.unused_security_group,
+    ],
+    "cloudtrail": [
+        Vulnerability.cloudtrail_not_logging,
+        Vulnerability.cloudtrail_not_multi_region,
+        Vulnerability.cloudtrail_no_log_file_validation,
+        Vulnerability.cloudtrail_bucket_public,
+    ],
+    "guardduty": [
+        Vulnerability.guardduty_disabled,
+    ],
+    "ebs": [
+        Vulnerability.ebs_volume_unencrypted,
+    ],
+    "rds": [
+        Vulnerability.rds_instance_unencrypted,
+    ],
+    "ssm": [
+        Vulnerability.ssm_parameter_unencrypted,
+    ],
+    "lambda": [
+        Vulnerability.lambda_overpermissive_role,
+    ],
+    "apigateway": [
+        Vulnerability.apigateway_open_resource,
+    ],
 }

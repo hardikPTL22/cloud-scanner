@@ -1,89 +1,44 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Loader2, Settings, Shield } from 'lucide-react';
-import { useAWSStore } from '@/store/aws-store';
-import { apiService } from '@/services/api';
-import type { Finding } from '@/types';
-import { FindingsTable } from './findings-table';
-import { ReportsTab } from './reports-tab';
-import { CredentialsDialog } from './credentials-dialog';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Settings, Shield } from "lucide-react";
+import { useAWSStore } from "@/store/aws-store";
+import { apiService } from "@/services/api";
+import type { Finding } from "@/types";
+import { FindingsTable } from "./findings-table";
+import { ReportsTab } from "./reports-tab";
+import { ServiceSelector } from "./service-selector";
+import { CredentialsDialog } from "./credentials-dialog";
+import { toast } from "sonner";
 
 export function MainInterface() {
   const { credentials, clearCredentials } = useAWSStore();
-  const [buckets, setBuckets] = useState<string[]>([]);
-  const [files, setFiles] = useState<string[]>([]);
-  const [selectedBucket, setSelectedBucket] = useState<string>('');
-  const [selectedFile, setSelectedFile] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [scanning, setScanning] = useState(false);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
 
-  useEffect(() => {
-    if (credentials) {
-      loadBuckets();
-    }
-  }, [credentials]);
-
-  useEffect(() => {
-    if (selectedBucket && credentials) {
-      loadFiles();
-    } else {
-      setFiles([]);
-      setSelectedFile('');
-    }
-  }, [selectedBucket, credentials]);
-
-  const loadBuckets = async () => {
-    if (!credentials) return;
-    
-    setLoading(true);
-    try {
-      const bucketList = await apiService.getBuckets(credentials);
-      setBuckets(bucketList);
-    } catch (error) {
-      console.error('Failed to load buckets', error);
-      toast.error('Failed to load buckets');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadFiles = async () => {
-    if (!credentials || !selectedBucket) return;
-    
-    setLoading(true);
-    try {
-      const fileList = await apiService.getFiles(credentials, selectedBucket);
-      setFiles(fileList);
-    } catch (error) {
-      console.error('Failed to load files', error);
-      toast.error('Failed to load files');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleScan = async () => {
-    if (!credentials) return;
-    
+    if (!credentials || selectedServices.length === 0) {
+      toast.error(
+        selectedServices.length === 0
+          ? "Please select at least one service to scan"
+          : "No credentials available"
+      );
+      return;
+    }
+
     setScanning(true);
     try {
-      const result = await apiService.scan(
-        credentials,
-        selectedBucket || undefined,
-        selectedFile || undefined
-      );
+      const result = await apiService.scan(credentials, selectedServices);
       setFindings(result.findings);
-      toast.success(`Found ${result.findings.length} findings`);
+      toast.success("Scan Complete", {
+        description: `Found ${result.findings.length} findings`,
+      });
     } catch (error) {
-      console.error('Scan failed', error);
-      toast.error('Scan Failed');
+      toast.error("Scan Failed");
     } finally {
       setScanning(false);
     }
@@ -91,17 +46,13 @@ export function MainInterface() {
 
   const handleLogout = () => {
     clearCredentials();
-    setBuckets([]);
-    setFiles([]);
-    setSelectedBucket('');
-    setSelectedFile('');
+    setSelectedServices([]);
     setFindings([]);
   };
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Shield className="h-8 w-8 text-primary" />
@@ -124,73 +75,29 @@ export function MainInterface() {
 
         <Separator />
 
-        {/* Controls */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Scan Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-y-2 items-start">
-                <label className="text-sm font-medium">S3 Bucket</label>
-                <Select
-                  value={selectedBucket}
-                  onValueChange={setSelectedBucket}
-                  disabled={loading}
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder="Select a bucket" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {buckets.map((bucket) => (
-                      <SelectItem key={bucket} value={bucket}>
-                        {bucket}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <ServiceSelector
+          selectedServices={selectedServices}
+          onSelectionChange={setSelectedServices}
+        />
 
-              <div className="flex flex-col gap-y-2 items-start">
-                <label className="text-sm font-medium">File (Optional)</label>
-                <Select
-                  value={selectedFile}
-                  onValueChange={(value) => setSelectedFile(value === "none" ? "" : value)}
-                  disabled={loading || !selectedBucket}
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder="Select a file (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No file selected</SelectItem>
-                    {files.map((file) => (
-                      <SelectItem key={file} value={file}>
-                        {file}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        <div className="flex justify-center">
+          <Button
+            onClick={handleScan}
+            disabled={scanning || selectedServices.length === 0}
+            size="lg"
+            className="px-8"
+          >
+            {scanning ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Scanning...
+              </>
+            ) : (
+              "Start Security Scan"
+            )}
+          </Button>
+        </div>
 
-            <Button
-              onClick={handleScan}
-              disabled={scanning || loading}
-              className="w-full md:w-auto"
-            >
-              {scanning ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Scanning...
-                </>
-              ) : (
-                'Start Scan'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Results Tabs */}
         {findings.length > 0 && (
           <Tabs defaultValue="findings" className="w-full">
             <TabsList className="grid w-full grid-cols-2">

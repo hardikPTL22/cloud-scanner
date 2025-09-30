@@ -1,179 +1,117 @@
-import os
-import tempfile
-from flask import Flask, request, g, jsonify, send_file
-from flask_cors import CORS
+from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel
 import boto3
-import sys
+import tempfile
+import os
+from scanner.mitre_map import Vulnerability
+from scanner import run_scans, generate_pdf_report, write_json, write_csv
 
-sys.dont_write_bytecode = True
+app = FastAPI()
 
-from scanner import (
-    find_public_s3_buckets,
-    find_unencrypted_s3_buckets,
-    find_over_permissive_iam_policies,
-    find_open_security_groups,
-    find_cloudtrail_not_logging,
-    scan_file,
-    generate_pdf_report,
-    write_json,
-    write_csv,
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-app = Flask(__name__)
-CORS(app)
-
 SEVERITY = {
-    "public_s3_bucket": "High",
-    "over_permissive_iam": "High",
-    "open_security_group": "Medium",
-    "unencrypted_s3_bucket": "Medium",
-    "cloudtrail_not_logging": "High",
-    "file_scan": "High",
+    Vulnerability.public_s3_bucket: "High",
+    Vulnerability.over_permissive_iam: "High",
+    Vulnerability.unencrypted_s3_bucket: "Medium",
+    Vulnerability.cloudtrail_not_logging: "High",
+    Vulnerability.s3_bucket_versioning_disabled: "Medium",
+    Vulnerability.s3_bucket_logging_disabled: "Medium",
+    Vulnerability.s3_bucket_block_public_access_disabled: "High",
+    Vulnerability.iam_user_no_mfa: "High",
+    Vulnerability.iam_unused_access_key: "Medium",
+    Vulnerability.iam_inline_policy: "Medium",
+    Vulnerability.iam_root_access_key: "High",
+    Vulnerability.open_security_group_ingress: "High",
+    Vulnerability.open_security_group_egress: "Medium",
+    Vulnerability.unused_security_group: "Low",
+    Vulnerability.cloudtrail_not_multi_region: "Medium",
+    Vulnerability.cloudtrail_no_log_file_validation: "Medium",
+    Vulnerability.cloudtrail_bucket_public: "High",
+    Vulnerability.guardduty_disabled: "High",
+    Vulnerability.vpc_flow_logs_disabled: "Medium",
+    Vulnerability.ebs_volume_unencrypted: "High",
+    Vulnerability.rds_instance_unencrypted: "High",
+    Vulnerability.ssm_parameter_unencrypted: "High",
+    Vulnerability.lambda_overpermissive_role: "High",
+    Vulnerability.apigateway_open_resource: "High",
 }
 
+class ScanRequest(BaseModel):
+    bucket: str = None
+    file: str = None
+    services: list = []
 
-def run_scans(s3_client, iam_client, ec2_client, cloudtrail_client, file_path=None):
-    findings = []
-
-    public_buckets = find_public_s3_buckets(s3_client)
-    for b in public_buckets:
-        findings.append(
-            {
-                "type": "public_s3_bucket",
-                "name": b,
-                "severity": SEVERITY["public_s3_bucket"],
-                "details": "Bucket has public ACL or bucket policy allowing public read.",
-            }
-        )
-
-    unenc = find_unencrypted_s3_buckets(s3_client)
-    for b in unenc:
-        findings.append(
-            {
-                "type": "unencrypted_s3_bucket",
-                "name": b,
-                "severity": SEVERITY["unencrypted_s3_bucket"],
-                "details": "Bucket does not have default server-side encryption configured.",
-            }
-        )
-
-    permissive_policies = find_over_permissive_iam_policies(iam_client)
-    for p in permissive_policies:
-        findings.append(
-            {
-                "type": "over_permissive_iam",
-                "name": p,
-                "severity": SEVERITY["over_permissive_iam"],
-                "details": "IAM policy contains '*' in Action or Resource.",
-            }
-        )
-
-    open_groups = find_open_security_groups(ec2_client)
-    for g in open_groups:
-        findings.append(
-            {
-                "type": "open_security_group",
-                "name": g,
-                "severity": SEVERITY["open_security_group"],
-                "details": "Security group has rules that allow ingress from 0.0.0.0/0 or ::/0.",
-            }
-        )
-
-    ct_not_logging = find_cloudtrail_not_logging(cloudtrail_client)
-    for t in ct_not_logging:
-        findings.append(
-            {
-                "type": "cloudtrail_not_logging",
-                "name": t,
-                "severity": SEVERITY["cloudtrail_not_logging"],
-                "details": "CloudTrail exists but is not currently logging events.",
-            }
-        )
-
-    if file_path:
-        result = scan_file(file_path)
-        if result["infected"]:
-            findings.append(
-                {
-                    "type": "file_scan",
-                    "name": os.path.basename(file_path),
-                    "severity": SEVERITY["file_scan"],
-                    "details": f"Infected with {result['malware']}",
-                }
-            )
-        else:
-            findings.append(
-                {
-                    "type": "file_scan",
-                    "name": os.path.basename(file_path),
-                    "severity": "Low",
-                    "details": "File scanned clean.",
-                }
-            )
-
-    print(f"Scan complete. Findings: {len(findings)}")  # Debug print
-    return findings
-
-
-@app.before_request
-def middleware():
+async def validate_aws_credentials(request: Request):
     if request.method == "OPTIONS":
-        return  # Skip preflight requests
-    try:
-        access_key = request.headers.get("X-AWS-Access-Key")
-        secret_key = request.headers.get("X-AWS-Secret-Key")
-        region = request.headers.get("X-AWS-Region", "us-east-1")
+        return
+    access_key = request.headers.get("X-AWS-Access-Key")
+    secret_key = request.headers.get("X-AWS-Secret-Key")
+    region = request.headers.get("X-AWS-Region", "us-east-1")
 
+    try:
         session = boto3.Session(
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
             region_name=region,
         )
         sts_client = session.client("sts")
-        sts_client.get_caller_identity()  # Validate credentials
+        sts_client.get_caller_identity()  
+        return {
+            "access_key": access_key,
+            "secret_key": secret_key,
+            "region": region,
+            "session": session,
+        }
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid AWS credentials")
 
-        g.s3_client = session.client("s3")
-        g.access_key = access_key
-        g.secret_key = secret_key
-        g.region = region
-    except Exception as e:
-        print(f"Error in middleware: {e}")  # Debug print
-        return jsonify({"error": f"Invalid AWS credentials"}), 401
 
+@app.post("/api/scan")
+async def scan(data: ScanRequest, creds: dict = Depends(validate_aws_credentials)):
+    file_path = None
+    selected_bucket = data.bucket
+    if data.file is not None and selected_bucket is not None:
+        file_key = data.file
+        bucket = data.bucket
+        temp_file = tempfile.NamedTemporaryFile("wb", delete=False)
+        try:
+            s3_client = creds["session"].client("s3")
+            obj = s3_client.get_object(Bucket=bucket, Key=file_key)
+            temp_file.write(obj["Body"].read())
+            temp_file.close()
+            file_path = temp_file.name
+        except Exception:
+            file_path = None
 
-@app.route("/api/scan", methods=["POST"])
-def scan():
-    data = request.json
-    if data.get("file", None) is not None and data.get("bucket", None) is not None:
-        file = data.get("file")
-        bucket = data.get("bucket")
-        file = tempfile.NamedTemporaryFile("wb")
-        obj = g.s3_client.get_object(Bucket=bucket, Key=file).get("Body")
-        file.write(obj.read())
-        file.close()
-        filepath = file.name
-        print(f"Received file for scanning: {filepath}")  # Debug print
-    else:
-        filepath = None
-        print("No file uploaded, running cloud scans only.")  # Debug print
+    selected_services = data.services
 
-    session = boto3.Session(
-        aws_access_key_id=g.access_key,
-        aws_secret_access_key=g.secret_key,
-        region_name=g.region,
+    findings = run_scans(
+        selected_services,
+        access_key=creds["access_key"],
+        secret_key=creds["secret_key"],
+        region=creds["region"],
     )
-    iam_client = session.client("iam")
-    ec2_client = session.client("ec2")
-    cloudtrail_client = session.client("cloudtrail")
-    findings = run_scans(g.s3_client, iam_client, ec2_client, cloudtrail_client, file_path=filepath)
-    print(f"Returning findings: {findings}")  # Debug print
 
-    return jsonify({"findings": findings})
+    if file_path:
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+
+    return JSONResponse(content={"findings": findings})
 
 
-@app.route("/api/report", methods=["POST"])
-def generate_report():
-    data = request.json
+@app.post("/api/report")
+async def generate_report(data: dict):
     findings = data.get("findings", [])
     format_type = data.get("format", "pdf").lower()
 
@@ -184,38 +122,38 @@ def generate_report():
     elif format_type == "csv":
         filepath = write_csv(findings)
     else:
-        return jsonify({"error": "Unsupported format"}), 400
+        raise HTTPException(status_code=400, detail="Unsupported format")
 
-    return send_file(filepath, as_attachment=True)
+    return FileResponse(filepath, filename=os.path.basename(filepath), media_type="application/octet-stream")
 
 
-@app.route("/api/buckets", methods=["GET"])
-def list_buckets():
+@app.get("/api/buckets")
+async def list_buckets(creds: dict = Depends(validate_aws_credentials)):
     try:
-        response = g.s3_client.list_buckets()
+        s3_client = creds["session"].client("s3")
+        response = s3_client.list_buckets()
         bucket_names = [b["Name"] for b in response.get("Buckets", [])]
-        return jsonify({"buckets": bucket_names})
+        return JSONResponse(content={"buckets": bucket_names})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.route("/api/files", methods=["GET"])
-def list_files():
+@app.get("/api/files")
+async def list_files(bucket: str = None, creds: dict = Depends(validate_aws_credentials)):
+    if not bucket:
+        raise HTTPException(status_code=400, detail="Bucket name is required")
     try:
-        data = request.args
-        if "bucket" not in data:
-            return jsonify({"error": "Bucket name is required"}), 400
-        response = g.s3_client.list_objects_v2(Bucket=data.get("bucket"))
+        s3_client = creds["session"].client("s3")
+        response = s3_client.list_objects_v2(Bucket=bucket)
         file_names = [b["Key"] for b in response.get("Contents", [])]
-        return jsonify({"files": file_names})
+        return JSONResponse(content={"files": file_names})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.route("/api/validate", methods=["GET"])
-def validate_credentials():
-    return jsonify({"valid": True})
-
+@app.get("/api/validate")
+async def validate_credentials():
+    return JSONResponse(content={"valid": True})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run

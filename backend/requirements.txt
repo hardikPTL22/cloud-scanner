@@ -1,6 +1,5 @@
-Flask
 boto3
 click
 reportlab
 clamd
-flask_cors
+fastapi[standard]

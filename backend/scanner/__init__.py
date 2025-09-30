@@ -4,6 +4,7 @@ from scanner.aws import (
     find_open_security_groups,
     find_unencrypted_s3_buckets,
     find_cloudtrail_not_logging,
+    run_scans,
 )
 from scanner.report_generator import (
     print_report,
@@ -12,4 +13,3 @@ from scanner.report_generator import (
     write_csv,
 )
 from scanner.summarize_mitre import summarize_mitre
-from scanner.file_scan import scan_file

@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useAWSStore } from '@/store/aws-store';
-import { CredentialsDialog } from '@/components/credentials-dialog';
-import { MainInterface } from '@/components/main-interface';
-import { Toaster } from '@/components/ui/sonner';
-import './App.css';
+import { useEffect, useState } from "react";
+import { useAWSStore } from "@/store/aws-store";
+import { CredentialsDialog } from "@/components/credentials-dialog";
+import { MainInterface } from "@/components/main-interface";
+import { Toaster } from "@/components/ui/sonner";
+import "./App.css";
 
 function App() {
   const credentials = useAWSStore((state) => state.credentials);
