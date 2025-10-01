@@ -1,0 +1,24 @@
+from botocore.exceptions import ClientError
+from scanner.mitre_map import Vulnerability, new_vulnerability
+
+
+def find_ssm_params_unencrypted(ssm_client, findings):
+    unencrypted = []
+    paginator = ssm_client.get_paginator("describe_parameters")
+    for page in paginator.paginate():
+        for param in page.get("Parameters", []):
+            name = param.get("Name")
+            try:
+                ssm_client.get_parameter(Name=name, WithDecryption=True)
+            except ClientError as e:
+                if e.response["Error"]["Code"] == "ParameterNotFound":
+                    continue
+                elif e.response["Error"]["Code"] == "ValidationException":
+                    unencrypted.append(name)
+    for param in unencrypted:
+        findings.append(
+            new_vulnerability(
+                Vulnerability.ssm_parameter_unencrypted,
+                param,
+            )
+        )

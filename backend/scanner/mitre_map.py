@@ -28,6 +28,34 @@ class Vulnerability(str, Enum):
     apigateway_open_resource = "apigateway_open_resource"
 
 
+SEVERITY = {
+    Vulnerability.public_s3_bucket: "High",
+    Vulnerability.over_permissive_iam: "High",
+    Vulnerability.unencrypted_s3_bucket: "Medium",
+    Vulnerability.cloudtrail_not_logging: "High",
+    Vulnerability.s3_bucket_versioning_disabled: "Medium",
+    Vulnerability.s3_bucket_logging_disabled: "Medium",
+    Vulnerability.s3_bucket_block_public_access_disabled: "High",
+    Vulnerability.iam_user_no_mfa: "High",
+    Vulnerability.iam_unused_access_key: "Medium",
+    Vulnerability.iam_inline_policy: "Medium",
+    Vulnerability.iam_root_access_key: "High",
+    Vulnerability.open_security_group_ingress: "High",
+    Vulnerability.open_security_group_egress: "Medium",
+    Vulnerability.unused_security_group: "Low",
+    Vulnerability.cloudtrail_not_multi_region: "Medium",
+    Vulnerability.cloudtrail_no_log_file_validation: "Medium",
+    Vulnerability.cloudtrail_bucket_public: "High",
+    Vulnerability.guardduty_disabled: "High",
+    Vulnerability.vpc_flow_logs_disabled: "Medium",
+    Vulnerability.ebs_volume_unencrypted: "High",
+    Vulnerability.rds_instance_unencrypted: "High",
+    Vulnerability.ssm_parameter_unencrypted: "High",
+    Vulnerability.lambda_overpermissive_role: "High",
+    Vulnerability.apigateway_open_resource: "High",
+}
+
+
 MITRE_MAP = {
     Vulnerability.public_s3_bucket: {
         "techniques": [
@@ -39,6 +67,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Public S3 buckets may allow anyone to list or download objects.",
+        "details": "Bucket has public ACL or bucket policy allowing public read.",
     },
     Vulnerability.s3_bucket_versioning_disabled: {
         "techniques": [
@@ -50,6 +79,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Versioning improves data durability and recovery options.",
+        "details": "Bucket versioning is not enabled.",
     },
     Vulnerability.unencrypted_s3_bucket: {
         "techniques": [
@@ -71,6 +101,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Encryption at rest protects S3 data from unauthorized access even if the storage layer is compromised.",
+        "details": "Bucket does not have default server-side encryption configured.",
     },
     Vulnerability.s3_bucket_logging_disabled: {
         "techniques": [
@@ -82,6 +113,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Access logs improve forensics and monitoring.",
+        "details": "Bucket logging is not enabled.",
     },
     Vulnerability.s3_bucket_block_public_access_disabled: {
         "techniques": [
@@ -93,6 +125,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Block Public Access prevents accidental exposure.",
+        "details": "Bucket block public access settings are not fully enabled.",
     },
     Vulnerability.over_permissive_iam: {
         "techniques": [
@@ -110,6 +143,7 @@ MITRE_MAP = {
             },
         ],
         "note": "Policies with Action or Resource set to '*' are high risk.",
+        "details": "Bucket block public access settings are not fully enabled.",
     },
     Vulnerability.iam_user_no_mfa: {
         "techniques": [
@@ -121,6 +155,7 @@ MITRE_MAP = {
             }
         ],
         "note": "MFA is critical for protecting account access.",
+        "details": "IAM user does not have MFA enabled.",
     },
     Vulnerability.iam_unused_access_key: {
         "techniques": [
@@ -132,6 +167,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Managing credential lifecycle is good hygiene.",
+        "details": "IAM access key unused for over 90 days.",
     },
     Vulnerability.iam_inline_policy: {
         "techniques": [
@@ -143,6 +179,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Inline policies are harder to audit and control.",
+        "details": "IAM inline policy attached to user or role.",
     },
     Vulnerability.iam_root_access_key: {
         "techniques": [
@@ -154,6 +191,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Root credentials should be tightly controlled.",
+        "details": "Root user has access keys, which is risky.",
     },
     Vulnerability.open_security_group_ingress: {
         "techniques": [
@@ -165,6 +203,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Open ingress rules increase attack surface.",
+        "details": "Security group has ingress rule open to the world.",
     },
     Vulnerability.open_security_group_egress: {
         "techniques": [
@@ -176,6 +215,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Open egress rules can facilitate exfiltration.",
+        "details": "Security group has egress rule open to the world.",
     },
     Vulnerability.unused_security_group: {
         "techniques": [
@@ -187,6 +227,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Clean up unused resources for security hygiene.",
+        "details": "Security group is not attached to any resource.",
     },
     Vulnerability.cloudtrail_not_logging: {
         "techniques": [
@@ -198,6 +239,7 @@ MITRE_MAP = {
             }
         ],
         "note": "CloudTrail logging is critical for detection.",
+        "details": "CloudTrail exists but not logging.",
     },
     Vulnerability.cloudtrail_not_multi_region: {
         "techniques": [
@@ -209,6 +251,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Multi-region improves visibility and security.",
+        "details": "CloudTrail is not multi-region.",
     },
     Vulnerability.cloudtrail_no_log_file_validation: {
         "techniques": [
@@ -220,6 +263,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Enables trustworthiness of logs.",
+        "details": "CloudTrail log file validation is not enabled.",
     },
     Vulnerability.cloudtrail_bucket_public: {
         "techniques": [
@@ -231,6 +275,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Secure CloudTrail buckets against public access.",
+        "details": "CloudTrail log bucket is publicly accessible.",
     },
     Vulnerability.guardduty_disabled: {
         "techniques": [
@@ -242,6 +287,7 @@ MITRE_MAP = {
             }
         ],
         "note": "GuardDuty helps detect threats early.",
+        "details": "GuardDuty is not enabled.",
     },
     Vulnerability.vpc_flow_logs_disabled: {
         "techniques": [
@@ -253,6 +299,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Flow logs help detect malicious network activity.",
+        "details": "VPC Flow Logs are not enabled.",
     },
     Vulnerability.ebs_volume_unencrypted: {
         "techniques": [
@@ -264,6 +311,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Encryption protects data at rest.",
+        "details": "EBS volume is not encrypted.",
     },
     Vulnerability.rds_instance_unencrypted: {
         "techniques": [
@@ -275,6 +323,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Encryption protects database storage.",
+        "details": "RDS instance storage is not encrypted.",
     },
     Vulnerability.ssm_parameter_unencrypted: {
         "techniques": [
@@ -286,6 +335,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Encrypt sensitive parameters in SSM.",
+        "details": "SSM parameter is unencrypted or could not be decrypted.",
     },
     Vulnerability.lambda_overpermissive_role: {
         "techniques": [
@@ -297,6 +347,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Least privilege limits function access.",
+        "details": "Lambda function assigned role with overly permissive policies.",
     },
     Vulnerability.apigateway_open_resource: {
         "techniques": [
@@ -308,6 +359,7 @@ MITRE_MAP = {
             }
         ],
         "note": "Open APIs risk unauthorized access.",
+        "details": "API Gateway resource allows open access without authorization.",
     },
 }
 
@@ -357,3 +409,12 @@ RESOURCES_MAP = {
         Vulnerability.apigateway_open_resource,
     ],
 }
+
+
+def new_vulnerability(type, resource):
+    return {
+        "type": type,
+        "name": resource,
+        "severity": SEVERITY[type],
+        "details": MITRE_MAP[type]["details"],
+    }

@@ -5,7 +5,6 @@ from pydantic import BaseModel
 import boto3
 import tempfile
 import os
-from scanner.mitre_map import Vulnerability
 from scanner import run_scans, generate_pdf_report, write_json, write_csv
 
 app = FastAPI()
@@ -18,37 +17,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SEVERITY = {
-    Vulnerability.public_s3_bucket: "High",
-    Vulnerability.over_permissive_iam: "High",
-    Vulnerability.unencrypted_s3_bucket: "Medium",
-    Vulnerability.cloudtrail_not_logging: "High",
-    Vulnerability.s3_bucket_versioning_disabled: "Medium",
-    Vulnerability.s3_bucket_logging_disabled: "Medium",
-    Vulnerability.s3_bucket_block_public_access_disabled: "High",
-    Vulnerability.iam_user_no_mfa: "High",
-    Vulnerability.iam_unused_access_key: "Medium",
-    Vulnerability.iam_inline_policy: "Medium",
-    Vulnerability.iam_root_access_key: "High",
-    Vulnerability.open_security_group_ingress: "High",
-    Vulnerability.open_security_group_egress: "Medium",
-    Vulnerability.unused_security_group: "Low",
-    Vulnerability.cloudtrail_not_multi_region: "Medium",
-    Vulnerability.cloudtrail_no_log_file_validation: "Medium",
-    Vulnerability.cloudtrail_bucket_public: "High",
-    Vulnerability.guardduty_disabled: "High",
-    Vulnerability.vpc_flow_logs_disabled: "Medium",
-    Vulnerability.ebs_volume_unencrypted: "High",
-    Vulnerability.rds_instance_unencrypted: "High",
-    Vulnerability.ssm_parameter_unencrypted: "High",
-    Vulnerability.lambda_overpermissive_role: "High",
-    Vulnerability.apigateway_open_resource: "High",
-}
 
 class ScanRequest(BaseModel):
     bucket: str = None
     file: str = None
     services: list = []
+
 
 async def validate_aws_credentials(request: Request):
     if request.method == "OPTIONS":
@@ -64,7 +38,7 @@ async def validate_aws_credentials(request: Request):
             region_name=region,
         )
         sts_client = session.client("sts")
-        sts_client.get_caller_identity()  
+        sts_client.get_caller_identity()
         return {
             "access_key": access_key,
             "secret_key": secret_key,
@@ -124,7 +98,11 @@ async def generate_report(data: dict):
     else:
         raise HTTPException(status_code=400, detail="Unsupported format")
 
-    return FileResponse(filepath, filename=os.path.basename(filepath), media_type="application/octet-stream")
+    return FileResponse(
+        filepath,
+        filename=os.path.basename(filepath),
+        media_type="application/octet-stream",
+    )
 
 
 @app.get("/api/buckets")
@@ -139,7 +117,9 @@ async def list_buckets(creds: dict = Depends(validate_aws_credentials)):
 
 
 @app.get("/api/files")
-async def list_files(bucket: str = None, creds: dict = Depends(validate_aws_credentials)):
+async def list_files(
+    bucket: str = None, creds: dict = Depends(validate_aws_credentials)
+):
     if not bucket:
         raise HTTPException(status_code=400, detail="Bucket name is required")
     try:
@@ -154,6 +134,7 @@ async def list_files(bucket: str = None, creds: dict = Depends(validate_aws_cred
 @app.get("/api/validate")
 async def validate_credentials():
     return JSONResponse(content={"valid": True})
+
 
 if __name__ == "__main__":
     app.run
