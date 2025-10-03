@@ -1,4 +1,4 @@
-from scanner.mitre_map import Vulnerability, RESOURCES_MAP
+from scanner.mitre_map import *
 from boto3.session import Session
 
 from scanner.aws.s3 import *
@@ -41,8 +41,7 @@ SCANS = {
 
 def run_scans(selected_services, access_key, secret_key, region):
     findings = []
-    for service in selected_services:
-        scans = RESOURCES_MAP[service]
+    for service, scans in selected_services.items():
         client = Session(
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,

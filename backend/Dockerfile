@@ -1,13 +1,11 @@
-FROM python:3.13
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm
 
 WORKDIR /app
 
-COPY requirements.txt ./
-
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . .
+
+RUN uv sync --locked
 
 EXPOSE 5000
 
-CMD ["fastapi", "dev", "app.py", "--port", "5000", "--host", "0.0.0.0"]
+CMD ["uv", "run", "fastapi", "dev", "app.py", "--port", "5000", "--host", "0.0.0.0"]

@@ -22,3 +22,25 @@ def find_ssm_params_unencrypted(ssm_client, findings):
                 param,
             )
         )
+
+
+def find_ssm_unencrypted_parameters(ssm_client, findings):
+    paginator = ssm_client.get_paginator("describe_parameters")
+    for page in paginator.paginate():
+        for param in page.get("Parameters", []):
+            name = param.get("Name")
+            try:
+                ssm_client.get_parameter(Name=name, WithDecryption=True)
+            except ClientError as e:
+                if e.response["Error"]["Code"] in (
+                    "ParameterNotFound",
+                    "ValidationException",
+                ):
+                    findings.append(
+                        {
+                            "type": Vulnerability.ssm_parameter_unencrypted,
+                            "name": name,
+                            "severity": "High",
+                            "details": "SSM Parameter is unencrypted or inaccessible.",
+                        }
+                    )

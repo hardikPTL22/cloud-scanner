@@ -21,7 +21,7 @@ app.add_middleware(
 class ScanRequest(BaseModel):
     bucket: str = None
     file: str = None
-    services: list = []
+    services: dict[str, list[str]] = {}
 
 
 async def validate_aws_credentials(request: Request):

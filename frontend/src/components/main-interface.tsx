@@ -12,6 +12,7 @@ import { ReportsTab } from "./reports-tab";
 import { ServiceSelector } from "./service-selector";
 import { CredentialsDialog } from "./credentials-dialog";
 import { toast } from "sonner";
+import { RESOURCES_MAP } from "@/lib/resource-map";
 
 export function MainInterface() {
   const { credentials, clearCredentials } = useAWSStore();
@@ -32,7 +33,13 @@ export function MainInterface() {
 
     setScanning(true);
     try {
-      const result = await apiService.scan(credentials, selectedServices);
+      const result = await apiService.scan(
+        credentials,
+        selectedServices.reduce((acc, service) => {
+          acc[service] = RESOURCES_MAP[service] ?? [];
+          return acc;
+        }, {} as Record<string, string[]>)
+      );
       setFindings(result.findings);
       toast.success("Scan Complete", {
         description: `Found ${result.findings.length} findings`,

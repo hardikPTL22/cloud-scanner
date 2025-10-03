@@ -13,3 +13,28 @@ def find_guardduty_disabled(guardduty_client, findings):
                 disabled.append(detector_id)
     for d in disabled:
         findings.append(new_vulnerability(Vulnerability.guardduty_disabled, d))
+
+
+def find_guardduty_detectors_disabled(guardduty_client, findings):
+    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
+    if not detectors:
+        findings.append(
+            {
+                "type": Vulnerability.guardduty_disabled,
+                "name": "No Detectors",
+                "severity": "High",
+                "details": "GuardDuty detectors are missing or disabled.",
+            }
+        )
+    else:
+        for det in detectors:
+            status = guardduty_client.get_detector(DetectorId=det).get("Status")
+            if status != "ENABLED":
+                findings.append(
+                    {
+                        "type": Vulnerability.guardduty_disabled,
+                        "name": det,
+                        "severity": "High",
+                        "details": "GuardDuty detector is not enabled.",
+                    }
+                )

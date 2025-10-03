@@ -10,3 +10,17 @@ def find_rds_unencrypted(rds_client, findings):
             unencrypted.append(arn)
     for db in unencrypted:
         findings.append(new_vulnerability(Vulnerability.rds_instance_unencrypted, db))
+
+
+def find_rds_public_access_enabled(rds_client, findings):
+    dbs = rds_client.describe_db_instances().get("DBInstances", [])
+    for db in dbs:
+        if db.get("PubliclyAccessible"):
+            findings.append(
+                {
+                    "type": Vulnerability.rds_instance_public_access,
+                    "name": db.get("DBInstanceIdentifier"),
+                    "severity": "High",
+                    "details": "RDS instance is publicly accessible.",
+                }
+            )

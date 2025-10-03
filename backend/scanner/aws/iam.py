@@ -140,3 +140,57 @@ def find_over_permissive_iam_policies(iam_client, findings):
                 b,
             )
         )
+
+
+def find_iam_users_with_console_access(iam_client, findings):
+    paginator = iam_client.get_paginator("list_users")
+    for page in paginator.paginate():
+        for user in page.get("Users", []):
+            user_name = user["UserName"]
+            try:
+                login_profile = iam_client.get_login_profile(UserName=user_name)
+                findings.append(
+                    {
+                        "type": Vulnerability.iam_user_with_console_access,
+                        "name": user_name,
+                        "severity": "Medium",
+                        "details": "IAM user has console login enabled.",
+                    }
+                )
+            except iam_client.exceptions.NoSuchEntityException:
+                continue
+
+
+def find_iam_policies_with_wildcards(iam_client, findings):
+    paginator = iam_client.get_paginator("list_policies")
+    for page in paginator.paginate(Scope="Local"):
+        for policy in page.get("Policies", []):
+            policy_arn = policy["Arn"]
+            versions = iam_client.list_policy_versions(PolicyArn=policy_arn).get(
+                "Versions", []
+            )
+            default_version = next(
+                (v for v in versions if v.get("IsDefaultVersion")), None
+            )
+            if not default_version:
+                continue
+            document = iam_client.get_policy_version(
+                PolicyArn=policy_arn, VersionId=default_version["VersionId"]
+            )["PolicyVersion"]["Document"]
+            statements = document.get("Statement", [])
+            if not isinstance(statements, list):
+                statements = [statements]
+            for statement in statements:
+                actions = statement.get("Action", [])
+                if not isinstance(actions, list):
+                    actions = [actions]
+                if "*" in actions:
+                    findings.append(
+                        {
+                            "type": Vulnerability.over_permissive_iam,
+                            "name": policy["PolicyName"],
+                            "severity": "High",
+                            "details": "IAM policy contains wildcard actions.",
+                        }
+                    )
+                    break

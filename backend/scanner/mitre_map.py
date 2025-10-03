@@ -19,13 +19,18 @@ class Vulnerability(str, Enum):
     cloudtrail_not_multi_region = "cloudtrail_not_multi_region"
     cloudtrail_no_log_file_validation = "cloudtrail_no_log_file_validation"
     cloudtrail_bucket_public = "cloudtrail_bucket_public"
+    cloudtrail_bucket_encryption_disabled = "cloudtrail_bucket_encryption_disabled"
     guardduty_disabled = "guardduty_disabled"
     vpc_flow_logs_disabled = "vpc_flow_logs_disabled"
     ebs_volume_unencrypted = "ebs_volume_unencrypted"
     rds_instance_unencrypted = "rds_instance_unencrypted"
+    rds_instance_public_access = "rds_instance_public_access"
     ssm_parameter_unencrypted = "ssm_parameter_unencrypted"
     lambda_overpermissive_role = "lambda_overpermissive_role"
+    lambda_public_access = "lambda_public_access"
     apigateway_open_resource = "apigateway_open_resource"
+    iam_user_with_console_access = "iam_user_with_console_access"
+    ec2_instance_public_ip = "ec2_instance_public_ip"
 
 
 SEVERITY = {
@@ -46,13 +51,18 @@ SEVERITY = {
     Vulnerability.cloudtrail_not_multi_region: "Medium",
     Vulnerability.cloudtrail_no_log_file_validation: "Medium",
     Vulnerability.cloudtrail_bucket_public: "High",
+    Vulnerability.cloudtrail_bucket_encryption_disabled: "High",
     Vulnerability.guardduty_disabled: "High",
     Vulnerability.vpc_flow_logs_disabled: "Medium",
     Vulnerability.ebs_volume_unencrypted: "High",
     Vulnerability.rds_instance_unencrypted: "High",
+    Vulnerability.rds_instance_public_access: "High",
     Vulnerability.ssm_parameter_unencrypted: "High",
     Vulnerability.lambda_overpermissive_role: "High",
+    Vulnerability.lambda_public_access: "High",
     Vulnerability.apigateway_open_resource: "High",
+    Vulnerability.iam_user_with_console_access: "Medium",
+    Vulnerability.ec2_instance_public_ip: "Medium",
 }
 
 
@@ -277,6 +287,18 @@ MITRE_MAP = {
         "note": "Secure CloudTrail buckets against public access.",
         "details": "CloudTrail log bucket is publicly accessible.",
     },
+    Vulnerability.cloudtrail_bucket_encryption_disabled: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "CloudTrail logs stored in unencrypted S3 buckets are at risk of exposure.",
+                "remediation": "Enable encryption on S3 buckets storing CloudTrail logs.",
+            }
+        ],
+        "note": "Encrypted buckets prevent log data exposure.",
+        "details": "CloudTrail log bucket encryption is disabled or missing.",
+    },
     Vulnerability.guardduty_disabled: {
         "techniques": [
             {
@@ -325,6 +347,18 @@ MITRE_MAP = {
         "note": "Encryption protects database storage.",
         "details": "RDS instance storage is not encrypted.",
     },
+    Vulnerability.rds_instance_public_access: {
+        "techniques": [
+            {
+                "id": "T1530",
+                "name": "Data from Cloud Storage",
+                "desc": "Publicly accessible RDS instances risk unauthorized data access.",
+                "remediation": "Restrict RDS instance to private subnets or use proper security groups.",
+            }
+        ],
+        "note": "Public accessibility increases attack surface.",
+        "details": "RDS instance is publicly accessible.",
+    },
     Vulnerability.ssm_parameter_unencrypted: {
         "techniques": [
             {
@@ -349,6 +383,18 @@ MITRE_MAP = {
         "note": "Least privilege limits function access.",
         "details": "Lambda function assigned role with overly permissive policies.",
     },
+    Vulnerability.lambda_public_access: {
+        "techniques": [
+            {
+                "id": "T1098.003",
+                "name": "Account Manipulation (Cloud Roles/Permissions)",
+                "desc": "Lambda functions with public access can be triggered by unauthorized parties.",
+                "remediation": "Apply strict IAM roles and resource policies limiting invocation.",
+            }
+        ],
+        "note": "Restrict Lambda invocation to trusted principals.",
+        "details": "Lambda function possibly has public access.",
+    },
     Vulnerability.apigateway_open_resource: {
         "techniques": [
             {
@@ -361,53 +407,30 @@ MITRE_MAP = {
         "note": "Open APIs risk unauthorized access.",
         "details": "API Gateway resource allows open access without authorization.",
     },
-}
-
-RESOURCES_MAP = {
-    "s3": [
-        Vulnerability.public_s3_bucket,
-        Vulnerability.s3_bucket_versioning_disabled,
-        Vulnerability.s3_bucket_logging_disabled,
-        Vulnerability.s3_bucket_block_public_access_disabled,
-        Vulnerability.unencrypted_s3_bucket,
-        Vulnerability.vpc_flow_logs_disabled,
-    ],
-    "iam": [
-        Vulnerability.over_permissive_iam,
-        Vulnerability.iam_user_no_mfa,
-        Vulnerability.iam_unused_access_key,
-        Vulnerability.iam_inline_policy,
-        Vulnerability.iam_root_access_key,
-    ],
-    "ec2": [
-        Vulnerability.open_security_group_ingress,
-        Vulnerability.open_security_group_egress,
-        Vulnerability.unused_security_group,
-    ],
-    "cloudtrail": [
-        Vulnerability.cloudtrail_not_logging,
-        Vulnerability.cloudtrail_not_multi_region,
-        Vulnerability.cloudtrail_no_log_file_validation,
-        Vulnerability.cloudtrail_bucket_public,
-    ],
-    "guardduty": [
-        Vulnerability.guardduty_disabled,
-    ],
-    "ebs": [
-        Vulnerability.ebs_volume_unencrypted,
-    ],
-    "rds": [
-        Vulnerability.rds_instance_unencrypted,
-    ],
-    "ssm": [
-        Vulnerability.ssm_parameter_unencrypted,
-    ],
-    "lambda": [
-        Vulnerability.lambda_overpermissive_role,
-    ],
-    "apigateway": [
-        Vulnerability.apigateway_open_resource,
-    ],
+    Vulnerability.iam_user_with_console_access: {
+        "techniques": [
+            {
+                "id": "T1078",
+                "name": "Valid Accounts",
+                "desc": "Users with console access increase attack surface if credentials are compromised.",
+                "remediation": "Review and limit console access to necessary users only.",
+            }
+        ],
+        "note": "Console access should be carefully controlled.",
+        "details": "IAM user has console login enabled.",
+    },
+    Vulnerability.ec2_instance_public_ip: {
+        "techniques": [
+            {
+                "id": "T1078",
+                "name": "Valid Accounts",
+                "desc": "EC2 instances with public IP addresses are directly accessible from the internet.",
+                "remediation": "Limit public IP usage and secure instances with security groups and NACLs.",
+            }
+        ],
+        "note": "Public IP increases attack surface.",
+        "details": "EC2 instance has a public IPv4 address.",
+    },
 }
 
 

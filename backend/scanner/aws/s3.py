@@ -158,3 +158,46 @@ def find_bucket_block_public_access_disabled(s3_client, findings):
         findings.append(
             new_vulnerability(Vulnerability.s3_bucket_block_public_access_disabled, b)
         )
+
+
+def find_s3_bucket_public_read_acls(s3_client, findings):
+    buckets = s3_client.list_buckets().get("Buckets", [])
+    for bucket in buckets:
+        bucket_name = bucket["Name"]
+        try:
+            acl = s3_client.get_bucket_acl(Bucket=bucket_name)
+            for grant in acl.get("Grants", []):
+                grantee = grant.get("Grantee", {})
+                if grantee.get("URI") in [
+                    "http://acs.amazonaws.com/groups/global/AllUsers",
+                    "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
+                ]:
+                    findings.append(
+                        {
+                            "type": Vulnerability.public_s3_bucket,
+                            "name": bucket_name,
+                            "severity": "High",
+                            "details": "Bucket has public read ACL.",
+                        }
+                    )
+                    break
+        except Exception:
+            continue
+
+
+def find_s3_bucket_encryption_disabled(s3_client, findings):
+    buckets = s3_client.list_buckets().get("Buckets", [])
+    for bucket in buckets:
+        try:
+            s3_client.get_bucket_encryption(Bucket=bucket["Name"])
+        except ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            if error_code == "ServerSideEncryptionConfigurationNotFoundError":
+                findings.append(
+                    {
+                        "type": Vulnerability.unencrypted_s3_bucket,
+                        "name": bucket["Name"],
+                        "severity": "Medium",
+                        "details": "Bucket encryption is not enabled.",
+                    }
+                )

@@ -22,3 +22,23 @@ def find_api_gateway_open_resources(apigateway_client, findings):
                 resource,
             )
         )
+
+
+def find_apigateway_resources_without_auth(apigateway_client, findings):
+    apis = apigateway_client.get_rest_apis().get("items", [])
+    for api in apis:
+        resources = apigateway_client.get_resources(restApiId=api.get("id")).get(
+            "items", []
+        )
+        for resource in resources:
+            resource_methods = resource.get("resourceMethods", {})
+            for method in resource_methods.values():
+                if method.get("authorizationType") in (None, "NONE"):
+                    findings.append(
+                        {
+                            "type": Vulnerability.apigateway_open_resource,
+                            "name": f"{api.get('id')}:{resource.get('id')}",
+                            "severity": "High",
+                            "details": "API Gateway resource allows open access without authorization.",
+                        }
+                    )
