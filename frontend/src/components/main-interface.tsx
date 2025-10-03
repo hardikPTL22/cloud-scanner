@@ -12,19 +12,20 @@ import { ReportsTab } from "./reports-tab";
 import { ServiceSelector } from "./service-selector";
 import { CredentialsDialog } from "./credentials-dialog";
 import { toast } from "sonner";
-import { RESOURCES_MAP } from "@/lib/resource-map";
 
 export function MainInterface() {
   const { credentials, clearCredentials } = useAWSStore();
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<
+    Record<string, string[]>
+  >({});
   const [scanning, setScanning] = useState(false);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
 
   const handleScan = async () => {
-    if (!credentials || selectedServices.length === 0) {
+    if (!credentials || Object.keys(selectedServices).length === 0) {
       toast.error(
-        selectedServices.length === 0
+        Object.keys(selectedServices).length === 0
           ? "Please select at least one service to scan"
           : "No credentials available"
       );
@@ -33,13 +34,7 @@ export function MainInterface() {
 
     setScanning(true);
     try {
-      const result = await apiService.scan(
-        credentials,
-        selectedServices.reduce((acc, service) => {
-          acc[service] = RESOURCES_MAP[service] ?? [];
-          return acc;
-        }, {} as Record<string, string[]>)
-      );
+      const result = await apiService.scan(credentials, selectedServices);
       setFindings(result.findings);
       toast.success("Scan Complete", {
         description: `Found ${result.findings.length} findings`,
@@ -53,7 +48,7 @@ export function MainInterface() {
 
   const handleLogout = () => {
     clearCredentials();
-    setSelectedServices([]);
+    setSelectedServices({});
     setFindings([]);
   };
 
@@ -90,7 +85,7 @@ export function MainInterface() {
         <div className="flex justify-center">
           <Button
             onClick={handleScan}
-            disabled={scanning || selectedServices.length === 0}
+            disabled={scanning || Object.keys(selectedServices).length === 0}
             size="lg"
             className="px-8"
           >
