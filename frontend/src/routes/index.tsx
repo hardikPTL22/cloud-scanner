@@ -3,9 +3,14 @@ import { useAWSStore } from "@/store/aws-store";
 import { CredentialsDialog } from "@/components/credentials-dialog";
 import { MainInterface } from "@/components/main-interface";
 import { Toaster } from "@/components/ui/sonner";
-import "./App.css";
 
-function App() {
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/")({
+  component: Page,
+});
+
+function Page() {
   const credentials = useAWSStore((state) => state.credentials);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
 
@@ -29,5 +34,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
