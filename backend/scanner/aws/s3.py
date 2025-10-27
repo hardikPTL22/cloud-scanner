@@ -1,16 +1,21 @@
 from botocore.exceptions import ClientError
 import json
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
-def find_public_s3_buckets_by_acl(s3_client):
+@inject_clients(clients=["s3"])
+def find_public_s3_buckets(s3_client, findings):
     try:
         bucket_list = s3_client.list_buckets()
     except Exception:
         return []
-    public_buckets_acl = []
+
+    public_buckets = set()
+
     for bucket in bucket_list.get("Buckets", []):
         bucket_name = bucket["Name"]
+
         try:
             acl = s3_client.get_bucket_acl(Bucket=bucket_name)
             for grant in acl.get("Grants", []):
@@ -19,24 +24,9 @@ def find_public_s3_buckets_by_acl(s3_client):
                     "http://acs.amazonaws.com/groups/global/AllUsers",
                     "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
                 ]:
-                    public_buckets_acl.append(bucket_name)
+                    public_buckets.add(bucket_name)
                     break
-        except ClientError:
-            continue
-        except Exception:
-            continue
-    return public_buckets_acl
 
-
-def find_public_s3_buckets_by_policy(s3_client):
-    try:
-        bucket_list = s3_client.list_buckets()
-    except Exception:
-        return []
-    public_buckets_policy = []
-    for bucket in bucket_list.get("Buckets", []):
-        bucket_name = bucket["Name"]
-        try:
             policy = s3_client.get_bucket_policy(Bucket=bucket_name)
             policy_dict = json.loads(policy["Policy"])
             for statement in policy_dict.get("Statement", []):
@@ -53,25 +43,20 @@ def find_public_s3_buckets_by_policy(s3_client):
                     if "s3:GetObject" in actions or "s3:*" in actions:
                         for resource in resources:
                             if resource.endswith("/*") and bucket_name in resource:
-                                public_buckets_policy.append(bucket_name)
+                                public_buckets.add(bucket_name)
                                 break
         except s3_client.exceptions.NoSuchBucketPolicy:
-            continue
+            pass
         except ClientError:
-            continue
+            pass
         except Exception:
-            continue
-    return public_buckets_policy
+            pass
 
-
-def find_public_s3_buckets(s3_client, findings):
-    acl_buckets = find_public_s3_buckets_by_acl(s3_client)
-    policy_buckets = find_public_s3_buckets_by_policy(s3_client)
-    combined = list(set(acl_buckets + policy_buckets))
-    for b in combined:
+    for b in public_buckets:
         findings.append(new_vulnerability(Vulnerability.public_s3_bucket, b))
 
 
+@inject_clients(clients=["s3"])
 def find_unencrypted_s3_buckets(s3_client, findings):
     bucket_list = s3_client.list_buckets()
     unencrypted = []
@@ -98,6 +83,7 @@ def find_unencrypted_s3_buckets(s3_client, findings):
         findings.append(new_vulnerability(Vulnerability.unencrypted_s3_bucket, b))
 
 
+@inject_clients(clients=["s3"])
 def find_bucket_versioning_disabled(s3_client, findings):
     versioning_disabled = []
     bucket_list = s3_client.list_buckets()
@@ -116,6 +102,7 @@ def find_bucket_versioning_disabled(s3_client, findings):
         )
 
 
+@inject_clients(clients=["s3"])
 def find_bucket_logging_disabled(s3_client, findings):
     logging_disabled = []
     bucket_list = s3_client.list_buckets()
@@ -131,6 +118,7 @@ def find_bucket_logging_disabled(s3_client, findings):
         findings.append(new_vulnerability(Vulnerability.s3_bucket_logging_disabled, b))
 
 
+@inject_clients(clients=["s3"])
 def find_bucket_block_public_access_disabled(s3_client, findings):
     disabled = []
     bucket_list = s3_client.list_buckets()
@@ -160,6 +148,7 @@ def find_bucket_block_public_access_disabled(s3_client, findings):
         )
 
 
+@inject_clients(clients=["s3"])
 def find_s3_bucket_public_read_acls(s3_client, findings):
     buckets = s3_client.list_buckets().get("Buckets", [])
     for bucket in buckets:
@@ -185,6 +174,7 @@ def find_s3_bucket_public_read_acls(s3_client, findings):
             continue
 
 
+@inject_clients(clients=["s3"])
 def find_s3_bucket_encryption_disabled(s3_client, findings):
     buckets = s3_client.list_buckets().get("Buckets", [])
     for bucket in buckets:

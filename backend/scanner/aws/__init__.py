@@ -29,27 +29,32 @@ SCANS = {
     Vulnerability.cloudtrail_not_multi_region: find_cloudtrail_not_multi_region,
     Vulnerability.cloudtrail_no_log_file_validation: find_cloudtrail_no_log_file_validation,
     Vulnerability.cloudtrail_bucket_public: find_cloudtrail_bucket_public,
+    Vulnerability.cloudtrail_bucket_encryption_disabled: find_cloudtrail_encryption_disabled,
     Vulnerability.guardduty_disabled: find_guardduty_disabled,
     Vulnerability.vpc_flow_logs_disabled: find_vpc_flow_logs_disabled,
     Vulnerability.ebs_volume_unencrypted: find_ebs_unencrypted,
     Vulnerability.rds_instance_unencrypted: find_rds_unencrypted,
+    Vulnerability.rds_instance_public_access: find_rds_public_access_enabled,
     Vulnerability.ssm_parameter_unencrypted: find_ssm_params_unencrypted,
     Vulnerability.lambda_overpermissive_role: find_lambda_overpermissive_roles,
+    Vulnerability.lambda_public_access: find_lambda_functions_with_public_access,
+    Vulnerability.iam_user_with_console_access: find_iam_user_with_console_access,
+    Vulnerability.ec2_instance_public_ip: find_ec2_instance_public_ip,
     Vulnerability.apigateway_open_resource: find_api_gateway_open_resources,
 }
 
 
 def run_scans(selected_services, access_key, secret_key, region):
     findings = []
+    session = Session(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        region_name=region,
+    )
     for service, scans in selected_services.items():
-        client = Session(
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            region_name=region,
-        ).client(service)
         for scan in scans:
             try:
-                SCANS[scan](client, findings)
+                SCANS[scan](session, findings=findings)
             except Exception as e:
                 print(f"Error running scan {scan} for service {service}: {e}")
     return findings

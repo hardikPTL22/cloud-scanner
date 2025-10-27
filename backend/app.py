@@ -3,9 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 import boto3
-import tempfile
 import os
 from scanner import run_scans, generate_pdf_report, write_json, write_csv
+from scanner.db import create_scan, update_scan, list_scans, get_scan
+
+# from fastapi import Query, UploadFile, File
+# import asyncio
+
 
 app = FastAPI()
 
@@ -51,43 +55,35 @@ async def validate_aws_credentials(request: Request):
 
 @app.post("/api/scan")
 async def scan(data: ScanRequest, creds: dict = Depends(validate_aws_credentials)):
-    file_path = None
-    selected_bucket = data.bucket
-    if data.file is not None and selected_bucket is not None:
-        file_key = data.file
-        bucket = data.bucket
-        temp_file = tempfile.NamedTemporaryFile("wb", delete=False)
-        try:
-            s3_client = creds["session"].client("s3")
-            obj = s3_client.get_object(Bucket=bucket, Key=file_key)
-            temp_file.write(obj["Body"].read())
-            temp_file.close()
-            file_path = temp_file.name
-        except Exception:
-            file_path = None
-
-    selected_services = data.services
+    selected_scans = list(data.services.values())
+    scan_id = create_scan(
+        creds["access_key"],
+        selected_scans,
+    )
 
     findings = run_scans(
-        selected_services,
+        data.services,
         access_key=creds["access_key"],
         secret_key=creds["secret_key"],
         region=creds["region"],
     )
 
-    if file_path:
-        try:
-            os.remove(file_path)
-        except Exception:
-            pass
+    update_scan(scan_id, findings=findings, completed=True)
 
-    return JSONResponse(content={"findings": findings})
+    return JSONResponse(content={"scan_id": scan_id, "findings": findings})
+
+
+@app.get("/api/scans")
+async def get_scans(creds: dict = Depends(validate_aws_credentials)):
+    scans = list_scans(creds["access_key"])
+    return {"scans": scans}
 
 
 @app.post("/api/report")
 async def generate_report(data: dict):
-    findings = data.get("findings", [])
+    scan_id = data.get("scan_id")
     format_type = data.get("format", "pdf").lower()
+    findings = get_scan(scan_id).get("findings", [])
 
     if format_type == "pdf":
         filepath = generate_pdf_report(findings)
@@ -129,6 +125,39 @@ async def list_files(
         return JSONResponse(content={"files": file_names})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# @app.get("/api/folders")
+# async def list_folders(
+#     bucket: str = Query(...), creds: dict = Depends(validate_aws_credentials)
+# ):
+#     s3 = creds["session"].client("s3")
+#     paginator = s3.get_paginator("list_objects_v2")
+#     result = paginator.paginate(Bucket=bucket, Delimiter="/")
+#     folders = []
+#     async for page in result:
+#         if "CommonPrefixes" in page:
+#             folders.extend([prefix["Prefix"] for prefix in page["CommonPrefixes"]])
+#     return {"folders": folders}
+
+
+# class S3FilesToScan(BaseModel):
+#     bucket: str
+#     keys: list[str]
+
+
+# @app.post("/api/scan-files")
+# async def scan_s3_files(
+#     data: S3FilesToScan, creds: dict = Depends(validate_aws_credentials)
+# ):
+#     results = []
+#     for key in data.keys:
+#         local_path = f"/tmp/{os.path.basename(key)}"
+#         download_file_from_s3(creds["session"], data.bucket, key, local_path)
+#         vt_result = await scan_file_with_virustotal(local_path, os.path.basename(key))
+#         os.remove(local_path)
+#         results.append({"file": key, "scan_result": vt_result})
+#     return {"results": results}
 
 
 @app.get("/api/validate")

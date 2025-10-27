@@ -9,37 +9,27 @@ import {
 } from "lucide-react";
 import { useAWSStore } from "@/store/aws-store";
 import { apiService } from "@/services/api";
-import type { Finding } from "@/types";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface ReportsTabProps {
-  findings: Finding[];
+  scanId: string;
 }
 
-export function ReportsTab({ findings }: ReportsTabProps) {
+export function ReportsTab({ scanId }: ReportsTabProps) {
   const { credentials } = useAWSStore();
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const downloadReport = async (format: "csv" | "json" | "pdf") => {
-    if (!credentials || findings.length === 0) {
-      toast.error(
-        findings.length === 0
-          ? "No findings to export"
-          : "No credentials available"
-      );
+    if (!credentials) {
+      toast.error("No credentials available");
       return;
     }
 
     setDownloading(format);
     try {
-      const blob = await apiService.downloadReport(
-        credentials,
-        findings,
-        format
-      );
+      const blob = await apiService.downloadReport(credentials, scanId, format);
 
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -81,11 +71,7 @@ export function ReportsTab({ findings }: ReportsTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-muted-foreground">
-        {findings.length > 0
-          ? `Generate reports from ${findings.length} findings`
-          : "Run a scan first to generate reports"}
-      </div>
+      <div className="text-sm text-muted-foreground">Generate reports</div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {reportOptions.map(({ format, title, description, icon: Icon }) => (
@@ -100,7 +86,7 @@ export function ReportsTab({ findings }: ReportsTabProps) {
               <p className="text-sm text-muted-foreground">{description}</p>
               <Button
                 onClick={() => downloadReport(format)}
-                disabled={findings.length === 0 || downloading !== null}
+                disabled={downloading !== null}
                 className="w-full"
                 variant={downloading === format ? "secondary" : "default"}
               >

@@ -21,6 +21,7 @@ export function MainInterface() {
   const [scanning, setScanning] = useState(false);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [scanId, setScanId] = useState<string | null>(null);
 
   const handleScan = async () => {
     if (!credentials || Object.keys(selectedServices).length === 0) {
@@ -36,6 +37,7 @@ export function MainInterface() {
     try {
       const result = await apiService.scan(credentials, selectedServices);
       setFindings(result.findings);
+      setScanId(result.scan_id);
       toast.success("Scan Complete", {
         description: `Found ${result.findings.length} findings`,
       });
@@ -54,11 +56,19 @@ export function MainInterface() {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">AWS Security Scanner</h1>
+            <h1 className="text-2xl font-bold">AWS Security Scanner</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm">
+              Scan
+            </Button>
+            <Button variant="ghost" size="sm">
+              History
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -100,7 +110,7 @@ export function MainInterface() {
           </Button>
         </div>
 
-        {findings.length > 0 && (
+        {scanId && findings.length > 0 && (
           <Tabs defaultValue="findings" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="findings">
@@ -124,7 +134,7 @@ export function MainInterface() {
                   <CardTitle>Download Reports</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ReportsTab findings={findings} />
+                  <ReportsTab scanId={scanId} />
                 </CardContent>
               </Card>
             </TabsContent>

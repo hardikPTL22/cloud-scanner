@@ -1,7 +1,9 @@
 from botocore.exceptions import ClientError
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
+@inject_clients(clients=["ssm"])
 def find_ssm_params_unencrypted(ssm_client, findings):
     unencrypted = []
     paginator = ssm_client.get_paginator("describe_parameters")
@@ -24,6 +26,7 @@ def find_ssm_params_unencrypted(ssm_client, findings):
         )
 
 
+@inject_clients(clients=["ssm"])
 def find_ssm_unencrypted_parameters(ssm_client, findings):
     paginator = ssm_client.get_paginator("describe_parameters")
     for page in paginator.paginate():

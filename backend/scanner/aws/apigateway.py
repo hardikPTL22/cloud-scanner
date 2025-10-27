@@ -1,6 +1,8 @@
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
+@inject_clients(clients=["apigateway"])
 def find_api_gateway_open_resources(apigateway_client, findings):
     open_resources = []
     apis = apigateway_client.get_rest_apis()
@@ -24,6 +26,7 @@ def find_api_gateway_open_resources(apigateway_client, findings):
         )
 
 
+@inject_clients(clients=["apigateway"])
 def find_apigateway_resources_without_auth(apigateway_client, findings):
     apis = apigateway_client.get_rest_apis().get("items", [])
     for api in apis:

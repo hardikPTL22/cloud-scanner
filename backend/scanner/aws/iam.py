@@ -1,6 +1,8 @@
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
+@inject_clients(clients=["iam"])
 def find_iam_users_without_mfa(iam_client, findings):
     users_no_mfa = []
     paginator = iam_client.get_paginator("list_users")
@@ -19,6 +21,7 @@ def find_iam_users_without_mfa(iam_client, findings):
         )
 
 
+@inject_clients(clients=["iam"])
 def find_unused_iam_access_keys(iam_client, findings):
     unused_keys = []
     paginator = iam_client.get_paginator("list_users")
@@ -51,6 +54,7 @@ def find_unused_iam_access_keys(iam_client, findings):
         )
 
 
+@inject_clients(clients=["iam"])
 def find_inline_policies(iam_client, findings):
     inline_policies = []
     paginator = iam_client.get_paginator("list_users")
@@ -76,6 +80,7 @@ def find_inline_policies(iam_client, findings):
         )
 
 
+@inject_clients(clients=["iam"])
 def find_root_access_keys_exist(iam_client, findings):
     try:
         root_keys = []
@@ -93,6 +98,7 @@ def find_root_access_keys_exist(iam_client, findings):
         pass
 
 
+@inject_clients(clients=["iam"])
 def find_over_permissive_iam_policies(iam_client, findings):
     over_permissive_policies = []
     from botocore.exceptions import ClientError
@@ -142,25 +148,24 @@ def find_over_permissive_iam_policies(iam_client, findings):
         )
 
 
-def find_iam_users_with_console_access(iam_client, findings):
+@inject_clients(clients=["iam"])
+def find_iam_user_with_console_access(iam_client, findings):
     paginator = iam_client.get_paginator("list_users")
     for page in paginator.paginate():
         for user in page.get("Users", []):
             user_name = user["UserName"]
             try:
-                login_profile = iam_client.get_login_profile(UserName=user_name)
+                iam_client.get_login_profile(UserName=user_name)
                 findings.append(
-                    {
-                        "type": Vulnerability.iam_user_with_console_access,
-                        "name": user_name,
-                        "severity": "Medium",
-                        "details": "IAM user has console login enabled.",
-                    }
+                    new_vulnerability(
+                        Vulnerability.iam_user_with_console_access, user_name
+                    )
                 )
             except iam_client.exceptions.NoSuchEntityException:
                 continue
 
 
+@inject_clients(clients=["iam"])
 def find_iam_policies_with_wildcards(iam_client, findings):
     paginator = iam_client.get_paginator("list_policies")
     for page in paginator.paginate(Scope="Local"):

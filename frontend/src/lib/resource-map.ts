@@ -39,7 +39,6 @@ export const RESOURCES_MAP: Record<string, string[]> = {
     Vulnerability.s3_bucket_logging_disabled,
     Vulnerability.s3_bucket_block_public_access_disabled,
     Vulnerability.unencrypted_s3_bucket,
-    Vulnerability.vpc_flow_logs_disabled,
   ],
   iam: [
     Vulnerability.over_permissive_iam,
@@ -54,6 +53,7 @@ export const RESOURCES_MAP: Record<string, string[]> = {
     Vulnerability.open_security_group_egress,
     Vulnerability.unused_security_group,
     Vulnerability.ec2_instance_public_ip,
+    Vulnerability.vpc_flow_logs_disabled,
   ],
   cloudtrail: [
     Vulnerability.cloudtrail_not_logging,

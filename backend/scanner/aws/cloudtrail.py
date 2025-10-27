@@ -1,7 +1,9 @@
 from botocore.exceptions import ClientError
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
+@inject_clients(clients=["cloudtrail"])
 def find_cloudtrail_not_logging(cloudtrail_client, findings):
     trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
     for t in trails_resp.get("trailList", []):
@@ -19,6 +21,7 @@ def find_cloudtrail_not_logging(cloudtrail_client, findings):
             continue
 
 
+@inject_clients(clients=["cloudtrail"])
 def find_cloudtrail_not_multi_region(cloudtrail_client, findings):
     trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
     for t in trails_resp.get("trailList", []):
@@ -32,6 +35,7 @@ def find_cloudtrail_not_multi_region(cloudtrail_client, findings):
             )
 
 
+@inject_clients(clients=["cloudtrail"])
 def find_cloudtrail_no_log_file_validation(cloudtrail_client, findings):
     trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
     for t in trails_resp.get("trailList", []):
@@ -45,7 +49,8 @@ def find_cloudtrail_no_log_file_validation(cloudtrail_client, findings):
             )
 
 
-def find_cloudtrail_bucket_public(s3_client, cloudtrail_client, findings):
+@inject_clients(clients=["cloudtrail", "s3"])
+def find_cloudtrail_bucket_public(cloudtrail_client, s3_client, findings):
     trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
     for t in trails_resp.get("trailList", []):
         bucket_name = t.get("S3BucketName")
@@ -69,6 +74,7 @@ def find_cloudtrail_bucket_public(s3_client, cloudtrail_client, findings):
                 continue
 
 
+@inject_clients(clients=["cloudtrail", "s3"])
 def find_cloudtrail_encryption_disabled(cloudtrail_client, s3_client, findings):
     trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
         "trailList", []

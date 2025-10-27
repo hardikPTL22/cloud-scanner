@@ -7,11 +7,12 @@ export interface AWSCredentials {
 export interface Finding {
   type: string;
   name: string;
-  severity: 'High' | 'Medium' | 'Low';
+  severity: "High" | "Medium" | "Low";
   details: string;
 }
 
 export interface ScanResponse {
+  scan_id: string;
   findings: Finding[];
 }
 

@@ -1,7 +1,9 @@
 import json
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
+@inject_clients(clients=["lambda", "iam"])
 def find_lambda_overpermissive_roles(lambda_client, iam_client, findings):
     funcs = lambda_client.list_functions().get("Functions", [])
     for f in funcs:
@@ -37,6 +39,7 @@ def find_lambda_overpermissive_roles(lambda_client, iam_client, findings):
                 continue
 
 
+@inject_clients(clients=["lambda"])
 def find_lambda_functions_with_public_access(lambda_client, findings):
     functions = lambda_client.list_functions().get("Functions", [])
     for fn in functions:

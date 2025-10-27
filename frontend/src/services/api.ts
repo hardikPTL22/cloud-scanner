@@ -87,14 +87,14 @@ export const apiService = {
 
   async downloadReport(
     credentials: AWSCredentials,
-    findings: any[],
+    scanId: string,
     format: "csv" | "json" | "pdf"
   ): Promise<Blob> {
     const response = await fetch(`${BASE_URL}/api/report`, {
       method: "POST",
       headers: createHeaders(credentials),
       body: JSON.stringify({
-        findings,
+        scan_id: scanId,
         format,
       }),
     });

@@ -4,6 +4,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: cloud-scanner-backend
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
     ports:
       - "5000:5000"
     restart: unless-stopped
@@ -16,3 +18,15 @@ services:
     ports:
       - "5173:80"
     restart: unless-stopped
+
+  mongo:
+    image: mongo:8.0
+    container_name: cloud-scanner-mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

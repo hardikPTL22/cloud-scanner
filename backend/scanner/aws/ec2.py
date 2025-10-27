@@ -1,6 +1,8 @@
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
+@inject_clients(clients=["ec2"])
 def find_security_groups_open_ingress(ec2_client, findings):
     response = ec2_client.describe_security_groups()
     for sg in response.get("SecurityGroups", []):
@@ -24,6 +26,7 @@ def find_security_groups_open_ingress(ec2_client, findings):
                     break
 
 
+@inject_clients(clients=["ec2"])
 def find_security_groups_open_egress(ec2_client, findings):
     response = ec2_client.describe_security_groups()
     for sg in response.get("SecurityGroups", []):
@@ -47,6 +50,7 @@ def find_security_groups_open_egress(ec2_client, findings):
                     break
 
 
+@inject_clients(clients=["ec2"])
 def find_unused_security_groups(ec2_client, findings):
     all_sgs = ec2_client.describe_security_groups().get("SecurityGroups", [])
     all_enis = ec2_client.describe_network_interfaces().get("NetworkInterfaces", [])
@@ -62,6 +66,7 @@ def find_unused_security_groups(ec2_client, findings):
             )
 
 
+@inject_clients(clients=["ec2"])
 def find_vpc_flow_logs_disabled(ec2_client, findings):
     vpcs_resp = ec2_client.describe_vpcs()
     for vpc in vpcs_resp.get("Vpcs", []):
@@ -75,31 +80,31 @@ def find_vpc_flow_logs_disabled(ec2_client, findings):
             )
 
 
+@inject_clients(clients=["ec2"])
 def find_ebs_unencrypted(ec2_client, findings):
-    volumes_resp = ec2_client.describe_volumes()
-    for vol in volumes_resp.get("Volumes", []):
-        vol_id = vol.get("VolumeId")
+    volumes = ec2_client.describe_volumes().get("Volumes", [])
+    for vol in volumes:
         if not vol.get("Encrypted", False):
             findings.append(
-                new_vulnerability(Vulnerability.ebs_volume_unencrypted, vol_id)
+                new_vulnerability(Vulnerability.ebs_volume_unencrypted, vol["VolumeId"])
             )
 
 
-def find_ec2_instances_with_public_ip(ec2_client, findings):
+@inject_clients(clients=["ec2"])
+def find_ec2_instance_public_ip(ec2_client, findings):
     reservations = ec2_client.describe_instances().get("Reservations", [])
     for reservation in reservations:
         for instance in reservation.get("Instances", []):
             if instance.get("PublicIpAddress"):
                 findings.append(
-                    {
-                        "type": Vulnerability.ec2_instance_public_ip,
-                        "name": instance.get("InstanceId"),
-                        "severity": "Medium",
-                        "details": "EC2 instance has a public IPv4 address.",
-                    }
+                    new_vulnerability(
+                        Vulnerability.ec2_instance_public_ip,
+                        instance.get("InstanceId"),
+                    )
                 )
 
 
+@inject_clients(clients=["ec2"])
 def find_security_groups_with_open_ports(ec2_client, findings):
     security_groups = ec2_client.describe_security_groups().get("SecurityGroups", [])
     for sg in security_groups:

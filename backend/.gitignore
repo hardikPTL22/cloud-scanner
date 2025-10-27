@@ -1,2 +1,3 @@
 /report
 .venv
+__pycache__/

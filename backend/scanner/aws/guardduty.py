@@ -1,6 +1,8 @@
 from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.aws.decorator import inject_clients
 
 
+@inject_clients(clients=["guardduty"])
 def find_guardduty_disabled(guardduty_client, findings):
     disabled = []
     detectors = guardduty_client.list_detectors()
@@ -15,6 +17,7 @@ def find_guardduty_disabled(guardduty_client, findings):
         findings.append(new_vulnerability(Vulnerability.guardduty_disabled, d))
 
 
+@inject_clients(clients=["guardduty"])
 def find_guardduty_detectors_disabled(guardduty_client, findings):
     detectors = guardduty_client.list_detectors().get("DetectorIds", [])
     if not detectors:
