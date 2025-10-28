@@ -1,6 +1,6 @@
 import { useAWSStore } from "@/lib/aws-store";
 import { CredentialsCard } from "@/components/credentials-card";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
@@ -9,10 +9,10 @@ export const Route = createFileRoute("/")({
 
 function Page() {
   const credentials = useAWSStore((state) => state.credentials);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   if (credentials) {
-    router.navigate({ to: "/scan" });
+    navigate({ to: "/scan" });
     return null;
   }
 

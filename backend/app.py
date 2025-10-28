@@ -16,7 +16,9 @@ from scanner.models import (
     BucketsResponse,
     FilesResponse,
     ValidateResponse,
+    ValidateRequest,
     ReportFormat,
+    GetScanResponse,
 )
 
 app = FastAPI(
@@ -84,6 +86,17 @@ async def scan(
 async def get_scans(creds: AwsCredentials = Depends(validate_aws_credentials)):
     scans = list_scans(creds.access_key)
     return ListScansResponse(scans=scans)
+
+
+@app.get("/api/scans/{scan_id}", response_model=GetScanResponse)
+async def get_scan_details(
+    scan_id: str, creds: AwsCredentials = Depends(validate_aws_credentials)
+):
+    scan = get_scan(scan_id)
+
+    if not scan or scan["aws_access_key"] != creds.access_key:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    return GetScanResponse(findings=scan.get("findings", []))
 
 
 @app.get("/reports/{token}", include_in_schema=False)
@@ -181,10 +194,18 @@ async def list_files(
 
 
 @app.post("/api/validate", response_model=ValidateResponse)
-async def validate_credentials(
-    creds: AwsCredentials = Depends(validate_aws_credentials),
-):
-    return ValidateResponse(valid=True)
+async def validate_credentials(data: ValidateRequest):
+    try:
+        session = boto3.Session(
+            aws_access_key_id=data.access_key,
+            aws_secret_access_key=data.secret_key,
+            region_name=data.region,
+        )
+        sts_client = session.client("sts")
+        sts_client.get_caller_identity()
+        return ValidateResponse(valid=True)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid AWS credentials")
 
 
 if __name__ == "__main__":

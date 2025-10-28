@@ -4,412 +4,458 @@
  */
 
 export interface paths {
-  "/api/scan": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Scan */
+        post: operations["scan_api_scan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Scan */
-    post: operations["scan_api_scan_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/scans": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/scans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scans */
+        get: operations["get_scans_api_scans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Scans */
-    get: operations["get_scans_api_scans_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/generate-report": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/scans/{scan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scan Details */
+        get: operations["get_scan_details_api_scans__scan_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Generate Report */
-    post: operations["generate_report_api_generate_report_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/buckets": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/generate-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate Report */
+        post: operations["generate_report_api_generate_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List Buckets */
-    get: operations["list_buckets_api_buckets_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/files": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/buckets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Buckets */
+        get: operations["list_buckets_api_buckets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List Files */
-    get: operations["list_files_api_files_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/validate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Files */
+        get: operations["list_files_api_files_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Validate Credentials */
-    post: operations["validate_credentials_api_validate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/api/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate Credentials */
+        post: operations["validate_credentials_api_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** BucketsResponse */
-    BucketsResponse: {
-      /** Buckets */
-      buckets: string[];
+    schemas: {
+        /** BucketsResponse */
+        BucketsResponse: {
+            /** Buckets */
+            buckets: string[];
+        };
+        /** FilesResponse */
+        FilesResponse: {
+            /** Files */
+            files: string[];
+        };
+        /** GenerateReportRequest */
+        GenerateReportRequest: {
+            /** Scan Id */
+            scan_id: string;
+            /** @default pdf */
+            format: components["schemas"]["ReportFormat"];
+        };
+        /** GenerateReportResponse */
+        GenerateReportResponse: {
+            /** Report Url */
+            report_url: string;
+        };
+        /** GetScanResponse */
+        GetScanResponse: {
+            /** Findings */
+            findings?: components["schemas"]["VulnerabilityFinding"][];
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** ListScansResponse */
+        ListScansResponse: {
+            /** Scans */
+            scans: components["schemas"]["ScanItem"][];
+        };
+        /**
+         * ReportFormat
+         * @enum {string}
+         */
+        ReportFormat: "pdf" | "json" | "csv";
+        /** ScanItem */
+        ScanItem: {
+            /** Scan Id */
+            scan_id: string;
+            /** Access Key */
+            access_key: string;
+            /** Selected Scans */
+            selected_scans: string[][];
+            /** Findings */
+            findings?: {
+                [key: string]: unknown;
+            }[];
+            /** Completed At */
+            completed_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ScanRequest */
+        ScanRequest: {
+            /** Bucket */
+            bucket?: string;
+            /** File */
+            file?: string;
+            /**
+             * Services
+             * @default {}
+             */
+            services: {
+                [key: string]: string[];
+            };
+        };
+        /** ScanResponse */
+        ScanResponse: {
+            /** Scan Id */
+            scan_id: string;
+            /** Findings */
+            findings?: components["schemas"]["VulnerabilityFinding"][];
+        };
+        /** ValidateRequest */
+        ValidateRequest: {
+            /** Access Key */
+            access_key: string;
+            /** Secret Key */
+            secret_key: string;
+            /** Region */
+            region: string;
+        };
+        /** ValidateResponse */
+        ValidateResponse: {
+            /** Valid */
+            valid: boolean;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
+        /**
+         * Vulnerability
+         * @enum {string}
+         */
+        Vulnerability: "public_s3_bucket" | "unencrypted_s3_bucket" | "s3_bucket_versioning_disabled" | "s3_bucket_logging_disabled" | "s3_bucket_block_public_access_disabled" | "over_permissive_iam" | "iam_user_no_mfa" | "iam_unused_access_key" | "iam_inline_policy" | "iam_root_access_key" | "open_security_group_ingress" | "open_security_group_egress" | "unused_security_group" | "cloudtrail_not_logging" | "cloudtrail_not_multi_region" | "cloudtrail_no_log_file_validation" | "cloudtrail_bucket_public" | "cloudtrail_bucket_encryption_disabled" | "guardduty_disabled" | "vpc_flow_logs_disabled" | "ebs_volume_unencrypted" | "rds_instance_unencrypted" | "rds_instance_public_access" | "ssm_parameter_unencrypted" | "lambda_overpermissive_role" | "lambda_public_access" | "apigateway_open_resource" | "iam_user_with_console_access" | "ec2_instance_public_ip";
+        /** VulnerabilityFinding */
+        VulnerabilityFinding: {
+            type: components["schemas"]["Vulnerability"];
+            /** Name */
+            name: string;
+            /** Severity */
+            severity: string;
+            /** Details */
+            details: string;
+        };
     };
-    /** FilesResponse */
-    FilesResponse: {
-      /** Files */
-      files: string[];
-    };
-    /** GenerateReportRequest */
-    GenerateReportRequest: {
-      /** Scan Id */
-      scan_id: string;
-      /** @default pdf */
-      format: components["schemas"]["ReportFormat"];
-    };
-    /** GenerateReportResponse */
-    GenerateReportResponse: {
-      /** Report Url */
-      report_url: string;
-    };
-    /** HTTPValidationError */
-    HTTPValidationError: {
-      /** Detail */
-      detail?: components["schemas"]["ValidationError"][];
-    };
-    /** ListScansResponse */
-    ListScansResponse: {
-      /** Scans */
-      scans: components["schemas"]["ScanItem"][];
-    };
-    /**
-     * ReportFormat
-     * @enum {string}
-     */
-    ReportFormat: "pdf" | "json" | "csv";
-    /** ScanItem */
-    ScanItem: {
-      /** Scan Id */
-      scan_id: string;
-      /** Access Key */
-      access_key: string;
-      /** Selected Scans */
-      selected_scans: string[][];
-      /** Findings */
-      findings?: {
-        [key: string]: unknown;
-      }[];
-      /** Completed At */
-      completed_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /** ScanRequest */
-    ScanRequest: {
-      /** Bucket */
-      bucket?: string;
-      /** File */
-      file?: string;
-      /**
-       * Services
-       * @default {}
-       */
-      services: {
-        [key: string]: string[];
-      };
-    };
-    /** ScanResponse */
-    ScanResponse: {
-      /** Scan Id */
-      scan_id: string;
-      /** Findings */
-      findings?: components["schemas"]["VulnerabilityFinding"][];
-    };
-    /** ValidateResponse */
-    ValidateResponse: {
-      /** Valid */
-      valid: boolean;
-    };
-    /** ValidationError */
-    ValidationError: {
-      /** Location */
-      loc: (string | number)[];
-      /** Message */
-      msg: string;
-      /** Error Type */
-      type: string;
-    };
-    /**
-     * Vulnerability
-     * @enum {string}
-     */
-    Vulnerability:
-      | "public_s3_bucket"
-      | "unencrypted_s3_bucket"
-      | "s3_bucket_versioning_disabled"
-      | "s3_bucket_logging_disabled"
-      | "s3_bucket_block_public_access_disabled"
-      | "over_permissive_iam"
-      | "iam_user_no_mfa"
-      | "iam_unused_access_key"
-      | "iam_inline_policy"
-      | "iam_root_access_key"
-      | "open_security_group_ingress"
-      | "open_security_group_egress"
-      | "unused_security_group"
-      | "cloudtrail_not_logging"
-      | "cloudtrail_not_multi_region"
-      | "cloudtrail_no_log_file_validation"
-      | "cloudtrail_bucket_public"
-      | "cloudtrail_bucket_encryption_disabled"
-      | "guardduty_disabled"
-      | "vpc_flow_logs_disabled"
-      | "ebs_volume_unencrypted"
-      | "rds_instance_unencrypted"
-      | "rds_instance_public_access"
-      | "ssm_parameter_unencrypted"
-      | "lambda_overpermissive_role"
-      | "lambda_public_access"
-      | "apigateway_open_resource"
-      | "iam_user_with_console_access"
-      | "ec2_instance_public_ip";
-    /** VulnerabilityFinding */
-    VulnerabilityFinding: {
-      type: components["schemas"]["Vulnerability"];
-      /** Name */
-      name: string;
-      /** Severity */
-      severity: string;
-      /** Details */
-      details: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  scan_api_scan_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    scan_api_scan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScanRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ScanRequest"];
-      };
+    get_scans_api_scans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListScansResponse"];
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    get_scan_details_api_scans__scan_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scan_id: string;
+            };
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["ScanResponse"];
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetScanResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
     };
-  };
-  get_scans_api_scans_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    generate_report_api_generate_report_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerateReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    list_buckets_api_buckets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["ListScansResponse"];
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BucketsResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  generate_report_api_generate_report_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    list_files_api_files_get: {
+        parameters: {
+            query?: {
+                bucket?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FilesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["GenerateReportRequest"];
-      };
+    validate_credentials_api_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["GenerateReportResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_buckets_api_buckets_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BucketsResponse"];
-        };
-      };
-    };
-  };
-  list_files_api_files_get: {
-    parameters: {
-      query?: {
-        bucket?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["FilesResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  validate_credentials_api_validate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ValidateResponse"];
-        };
-      };
-    };
-  };
 }

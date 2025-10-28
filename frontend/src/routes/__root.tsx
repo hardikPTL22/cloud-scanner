@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet, useRouter } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { Separator } from "@/components/ui/separator";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,11 @@ import { Link } from "@tanstack/react-router";
 
 function RootLayout() {
   const { clearCredentials } = useAWSStore();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     clearCredentials();
-    router.navigate({ to: "/" });
+    navigate({ to: "/" });
   };
 
   return (

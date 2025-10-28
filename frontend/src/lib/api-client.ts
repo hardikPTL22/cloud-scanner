@@ -8,8 +8,8 @@ const authMiddleware: Middleware = {
     const awsCredentials = useAWSStore.getState().credentials;
 
     if (awsCredentials) {
-      request.headers.set("X-AWS-Access-Key", awsCredentials.accessKey);
-      request.headers.set("X-AWS-Secret-Key", awsCredentials.secretKey);
+      request.headers.set("X-AWS-Access-Key", awsCredentials.access_key);
+      request.headers.set("X-AWS-Secret-Key", awsCredentials.secret_key);
       request.headers.set("X-AWS-Region", awsCredentials.region);
     }
 
@@ -17,7 +17,9 @@ const authMiddleware: Middleware = {
   },
 };
 
-const client = createFetchClient<paths>({ baseUrl: "http://localhost:5000" });
+export const client = createFetchClient<paths>({
+  baseUrl: "http://localhost:5000",
+});
 export const api = createClient(client);
 
 client.use(authMiddleware);

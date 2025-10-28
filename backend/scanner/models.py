@@ -34,6 +34,16 @@ class GenerateReportResponse(BaseModel):
     report_url: str
 
 
+class ValidateRequest(BaseModel):
+    access_key: str
+    secret_key: str
+    region: str
+
+
+class ValidateResponse(BaseModel):
+    valid: bool
+
+
 class AwsCredentials(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -41,6 +51,10 @@ class AwsCredentials(BaseModel):
     secret_key: str
     region: str = "us-east-1"
     session: boto3.Session
+
+
+class GetScanResponse(BaseModel):
+    findings: list[VulnerabilityFinding] = Field(default_factory=list)
 
 
 class ScanResponse(BaseModel):
@@ -67,7 +81,3 @@ class BucketsResponse(BaseModel):
 
 class FilesResponse(BaseModel):
     files: list[str]
-
-
-class ValidateResponse(BaseModel):
-    valid: bool

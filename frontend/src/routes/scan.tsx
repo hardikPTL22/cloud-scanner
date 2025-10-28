@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import type { Finding } from "@/types";
 import { FindingsTable } from "@/components/findings-table";
 import { ReportsTab } from "@/components/reports-tab";
 import { ServiceSelector } from "@/components/service-selector";
+import { ScanCharts } from "@/components/scan-charts";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api-client";
@@ -56,8 +56,9 @@ function Page() {
       });
     }
   };
+
   return (
-    <>
+    <div className="space-y-6">
       <ServiceSelector
         selectedServices={selectedServices}
         onSelectionChange={setSelectedServices}
@@ -84,35 +85,39 @@ function Page() {
       </div>
 
       {scanId && findings.length > 0 && (
-        <Tabs defaultValue="findings" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="findings">
-              Scan Results ({findings.length})
-            </TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </TabsList>
-          <TabsContent value="findings" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Findings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FindingsTable findings={findings} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="reports" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Download Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ReportsTab scanId={scanId} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <>
+          <ScanCharts findings={findings} />
+
+          <Tabs defaultValue="findings" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="findings">
+                Scan Results ({findings.length})
+              </TabsTrigger>
+              <TabsTrigger value="reports">Reports</TabsTrigger>
+            </TabsList>
+            <TabsContent value="findings" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security Findings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FindingsTable findings={findings} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="reports" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Download Reports</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ReportsTab scanId={scanId} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </>
       )}
-    </>
+    </div>
   );
 }

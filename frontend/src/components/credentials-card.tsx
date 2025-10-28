@@ -7,36 +7,41 @@ import { useAWSStore } from "@/lib/aws-store";
 import type { AWSCredentials } from "@/types";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { api } from "@/lib/api-client";
 
 export function CredentialsCard() {
   const credentials = useAWSStore((state) => state.credentials);
   const [formData, setFormData] = useState<AWSCredentials>({
-    accessKey: credentials?.accessKey ?? "",
-    secretKey: credentials?.secretKey ?? "",
+    access_key: credentials?.access_key ?? "",
+    secret_key: credentials?.secret_key ?? "",
     region: credentials?.region ?? "us-east-1",
   });
   const setCredentials = useAWSStore((state) => state.setCredentials);
   const clearCredentials = useAWSStore((state) => state.clearCredentials);
   const validate = api.useMutation("post", "/api/validate");
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (formData.accessKey && formData.secretKey && formData.region) {
-        const { valid } = await validate.mutateAsync({});
-        setCredentials(formData);
+      if (formData.access_key && formData.secret_key && formData.region) {
+        const { valid } = await validate.mutateAsync({
+          body: {
+            access_key: formData.access_key,
+            secret_key: formData.secret_key,
+            region: formData.region,
+          },
+        });
         if (valid) {
-          router.navigate({ to: "/scan" });
+          setCredentials(formData);
+          navigate({ to: "/scan" });
         } else {
           clearCredentials();
           toast.error("Invalid AWS Credentials.");
         }
       }
     } catch (error) {
-      clearCredentials();
       console.error("Could not validate AWS Credentials", error);
       toast.error("Could not validate AWS Credentials.");
     }
@@ -49,19 +54,19 @@ export function CredentialsCard() {
     };
 
   return (
-    <Card>
+    <Card className="min-w-md w-fit mx-auto">
+      <CardHeader>
+        <CardTitle>AWS Credentials</CardTitle>
+      </CardHeader>
       <CardContent className="sm:max-w-md">
-        <CardHeader>
-          <CardTitle>AWS Credentials</CardTitle>
-        </CardHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="accessKey">Access Key</Label>
             <Input
               id="accessKey"
               type="text"
-              value={formData.accessKey}
-              onChange={handleInputChange("accessKey")}
+              value={formData.access_key}
+              onChange={handleInputChange("access_key")}
               placeholder="AKIA..."
               required
             />
@@ -71,8 +76,8 @@ export function CredentialsCard() {
             <Input
               id="secretKey"
               type="password"
-              value={formData.secretKey}
-              onChange={handleInputChange("secretKey")}
+              value={formData.secret_key}
+              onChange={handleInputChange("secret_key")}
               placeholder="Enter secret key"
               required
             />

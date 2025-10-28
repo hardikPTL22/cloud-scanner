@@ -1,15 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  CartesianGrid,
-} from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
   Select,
   SelectTrigger,
@@ -28,9 +19,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
 import { api } from "@/lib/api-client";
 import { RESOURCES_MAP } from "@/lib/resource-map";
-import { Button } from "@/components/ui/button";
+import { ArrowUpRight } from "lucide-react";
 
 const SERVICE_MAP: Record<string, string> = {};
 Object.entries(RESOURCES_MAP).forEach(([service, vulnerabilities]) => {
@@ -150,6 +150,32 @@ export function Page() {
     [data, selectedService]
   );
 
+  const chartConfig: ChartConfig = useMemo(() => {
+    if (selectedService) {
+      return {
+        count: {
+          label: `${selectedService} Vulnerabilities`,
+          color:
+            SERVICE_LIST.findIndex((s) => s === selectedService) >= 0
+              ? SERVICE_COLORS[
+                  SERVICE_LIST.findIndex((s) => s === selectedService) %
+                    SERVICE_COLORS.length
+                ]
+              : "var(--color-count)",
+        },
+      };
+    }
+
+    const config: ChartConfig = {};
+    SERVICE_LIST.forEach((service, idx) => {
+      config[service] = {
+        label: service,
+        color: SERVICE_COLORS[idx % SERVICE_COLORS.length],
+      };
+    });
+    return config;
+  }, [selectedService]);
+
   const allZero = selectedService ? trend.every((d) => d.count === 0) : false;
   const hasNoData = !data || data.scans.length === 0;
 
@@ -171,9 +197,10 @@ export function Page() {
     if (selectedService) {
       return Math.max(...trend.map((d) => d.count), 0);
     }
+
     return Math.max(
-      ...allServicesTrend.flatMap((scan) =>
-        SERVICE_LIST.map((service) => scan[service] || 0)
+      ...allServicesTrend.map((scan) =>
+        SERVICE_LIST.reduce((sum, service) => sum + (scan[service] || 0), 0)
       ),
       0
     );
@@ -250,7 +277,7 @@ export function Page() {
           </Select>
         </CardHeader>
         <CardContent>
-          <div className="h-72 flex items-center justify-center">
+          <div className="flex items-center justify-center">
             {hasNoData ? (
               <div className="text-muted-foreground text-center w-full">
                 No scan history available. Run your first scan to see
@@ -263,8 +290,14 @@ export function Page() {
                 all scans.
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={selectedService ? trend : allServicesTrend}>
+              <ChartContainer
+                config={chartConfig}
+                className="min-h-[280px] w-full"
+              >
+                <LineChart
+                  data={selectedService ? trend : allServicesTrend}
+                  margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="date"
@@ -272,28 +305,53 @@ export function Page() {
                     textAnchor="end"
                     height={80}
                     tick={{ fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
                   />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Legend />
+                  <YAxis
+                    allowDecimals={false}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend content={<ChartLegendContent />} />
                   {selectedService ? (
                     <Line
                       type="monotone"
                       dataKey="count"
-                      name={`${selectedService} Vulnerabilities`}
-                      stroke="#6366f1"
+                      stroke={
+                        SERVICE_LIST.findIndex((s) => s === selectedService) >=
+                        0
+                          ? SERVICE_COLORS[
+                              SERVICE_LIST.findIndex(
+                                (s) => s === selectedService
+                              ) % SERVICE_COLORS.length
+                            ]
+                          : "var(--color-count)"
+                      }
                       strokeWidth={2}
-                      dot={{ fill: "#6366f1", r: 4 }}
+                      dot={{
+                        fill:
+                          SERVICE_LIST.findIndex(
+                            (s) => s === selectedService
+                          ) >= 0
+                            ? SERVICE_COLORS[
+                                SERVICE_LIST.findIndex(
+                                  (s) => s === selectedService
+                                ) % SERVICE_COLORS.length
+                              ]
+                            : "var(--color-count)",
+                        r: 4,
+                      }}
                       activeDot={{ r: 6 }}
                     />
                   ) : (
-                    SERVICE_LIST.map((service, idx) => (
+                    SERVICE_LIST.map((service) => (
                       <Line
                         key={service}
                         type="monotone"
                         dataKey={service}
-                        name={service}
-                        stroke={SERVICE_COLORS[idx % SERVICE_COLORS.length]}
+                        stroke={`var(--color-${service})`}
                         strokeWidth={2}
                         dot={{ r: 3 }}
                         activeDot={{ r: 5 }}
@@ -301,7 +359,7 @@ export function Page() {
                     ))
                   )}
                 </LineChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             )}
           </div>
         </CardContent>
@@ -324,6 +382,7 @@ export function Page() {
                   <TableHead className="text-center">Medium</TableHead>
                   <TableHead className="text-center">Low</TableHead>
                   <TableHead className="text-center">Duration</TableHead>
+                  <TableHead className="text-center">View Details</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -389,7 +448,18 @@ export function Page() {
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
-                          {duration ? `${duration}s` : "-"}
+                          {duration ? `${duration}s` : `-`}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Link
+                            to="/scans/$scanId"
+                            params={{ scanId: scan.scan_id }}
+                            target="_blank"
+                            className="flex items-center justify-center underline text-sky-300 gap-2"
+                          >
+                            Visit
+                            <ArrowUpRight className="size-4" />
+                          </Link>
                         </TableCell>
                       </TableRow>
                     );
