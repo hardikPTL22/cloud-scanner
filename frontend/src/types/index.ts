@@ -1,20 +1,13 @@
+import type { components } from "@/openapi";
+
 export interface AWSCredentials {
   accessKey: string;
   secretKey: string;
   region: string;
 }
 
-export interface Finding {
-  type: string;
-  name: string;
-  severity: "High" | "Medium" | "Low";
-  details: string;
-}
-
-export interface ScanResponse {
-  scan_id: string;
-  findings: Finding[];
-}
+export type Finding = components["schemas"]["VulnerabilityFinding"];
+export type ScanResponse = components["schemas"]["ScanResponse"];
 
 export interface Service {
   id: string;
@@ -23,10 +16,6 @@ export interface Service {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
-export interface BucketsResponse {
-  buckets: string[];
-}
+export type BucketsResponse = components["schemas"]["BucketsResponse"];
 
-export interface FilesResponse {
-  files: string[];
-}
+export type FilesResponse = components["schemas"]["FilesResponse"];

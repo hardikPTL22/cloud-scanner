@@ -432,12 +432,3 @@ MITRE_MAP = {
         "details": "EC2 instance has a public IPv4 address.",
     },
 }
-
-
-def new_vulnerability(type, resource):
-    return {
-        "type": type,
-        "name": resource,
-        "severity": SEVERITY[type],
-        "details": MITRE_MAP[type]["details"],
-    }

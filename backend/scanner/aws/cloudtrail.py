@@ -1,5 +1,6 @@
 from botocore.exceptions import ClientError
-from scanner.mitre_map import Vulnerability, new_vulnerability
+from scanner.mitre_map import Vulnerability
+from scanner.utils import new_vulnerability
 from scanner.aws.decorator import inject_clients
 
 

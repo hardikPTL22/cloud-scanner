@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pymongo import MongoClient
 from bson import ObjectId
 import os
+from scanner.models import VulnerabilityFinding, ScanItem
 
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27018")
@@ -9,6 +10,17 @@ client = MongoClient(MONGO_URI)
 
 db = client.get_database("cloud_scanner")
 scans_collection = db.get_collection("scans")
+
+
+def map_object_to_class(obj: dict):
+    return ScanItem(
+        _id=str(obj["_id"]),
+        access_key=obj["aws_access_key"],
+        selected_scans=obj["scans"],
+        findings=obj.get("findings", []),
+        completed=obj.get("completed", False),
+        created_at=obj.get("created_at"),
+    )
 
 
 def create_scan(aws_access_key: str, scans: list):
@@ -24,14 +36,16 @@ def create_scan(aws_access_key: str, scans: list):
     return str(inserted.inserted_id)
 
 
-def update_scan(scan_id: str, findings: list, completed: bool):
+def update_scan(scan_id: str, findings: list[VulnerabilityFinding], completed: bool):
     update_fields = {
         "completed": completed,
     }
 
     if completed and findings is not None:
-        update_fields["findings"] = findings
-        update_fields["completed_at"] = datetime.utcnow()
+        update_fields["findings"] = list(
+            map(lambda finding: finding.model_dump(), findings)
+        )
+        update_fields["completed_at"] = datetime.now(timezone.utc)
 
     result = scans_collection.update_one(
         {"_id": ObjectId(scan_id)}, {"$set": update_fields}
@@ -39,12 +53,12 @@ def update_scan(scan_id: str, findings: list, completed: bool):
     return result.modified_count > 0
 
 
-def list_scans(aws_access_key: str, limit: int = 10):
+def list_scans(aws_access_key: str, limit: int | None = None):
     cursor = scans_collection.find({"aws_access_key": aws_access_key}).sort(
         "created_at", -1
     )
 
-    return cursor.to_list(limit)
+    return list(map(map_object_to_class, cursor.to_list(limit)))
 
 
 def get_scan(scan_id: str):

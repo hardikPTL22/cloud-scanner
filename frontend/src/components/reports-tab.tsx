@@ -7,10 +7,10 @@ import {
   FileSpreadsheet,
   Loader2,
 } from "lucide-react";
-import { useAWSStore } from "@/store/aws-store";
-import { apiService } from "@/services/api";
+import { useAWSStore } from "@/lib/aws-store";
 import { useState } from "react";
 import { toast } from "sonner";
+import { api } from "@/lib/api-client";
 
 interface ReportsTabProps {
   scanId: string;
@@ -19,33 +19,33 @@ interface ReportsTabProps {
 export function ReportsTab({ scanId }: ReportsTabProps) {
   const { credentials } = useAWSStore();
   const [downloading, setDownloading] = useState<string | null>(null);
+  const generateUrl = api.useMutation("post", "/api/generate-report");
 
-  const downloadReport = async (format: "csv" | "json" | "pdf") => {
+  const downloadReport = (format: "csv" | "json" | "pdf") => {
     if (!credentials) {
       toast.error("No credentials available");
       return;
     }
 
     setDownloading(format);
-    try {
-      const blob = await apiService.downloadReport(credentials, scanId, format);
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `security-report.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast.success(`${format.toUpperCase()} report downloaded successfully`);
-    } catch (error) {
-      console.error("Download failed", error);
-      toast.error("Download Failed");
-    } finally {
-      setDownloading(null);
-    }
+    generateUrl
+      .mutateAsync({
+        body: {
+          scan_id: scanId,
+          format: format,
+        },
+      })
+      .then(({ report_url }) => {
+        window.open(`http://localhost:5000${report_url}`, "_blank")?.focus();
+        toast.success(`${format.toUpperCase()} report downloaded successfully`);
+      })
+      .catch((error) => {
+        console.error("Error generating report:", error);
+        toast.error("Failed to generate report");
+      })
+      .finally(() => {
+        setDownloading(null);
+      });
   };
 
   const reportOptions = [

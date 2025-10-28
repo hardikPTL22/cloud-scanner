@@ -6,9 +6,11 @@ services:
     container_name: cloud-scanner-backend
     environment:
       - MONGO_URI=mongodb://mongo:27017
+      - REDIS_HOST=redis
     ports:
       - "5000:5000"
     restart: unless-stopped
+    mem_limit: 1g
 
   vite-react-app:
     build:
@@ -18,6 +20,7 @@ services:
     ports:
       - "5173:80"
     restart: unless-stopped
+    mem_limit: 1g
 
   mongo:
     image: mongo:8.0
@@ -28,5 +31,15 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  redis:
+    image: redis:8-alpine
+    container_name: cloud-scanner-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
 volumes:
   mongo-data:
+  redis-data:

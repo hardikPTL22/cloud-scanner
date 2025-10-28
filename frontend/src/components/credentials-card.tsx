@@ -1,28 +1,16 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAWSStore } from "@/store/aws-store";
+import { useAWSStore } from "@/lib/aws-store";
 import type { AWSCredentials } from "@/types";
 import { toast } from "sonner";
-import { apiService } from "@/services/api";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "@tanstack/react-router";
+import { api } from "@/lib/api-client";
 
-interface CredentialsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export function CredentialsDialog({
-  open,
-  onOpenChange,
-}: CredentialsDialogProps) {
+export function CredentialsCard() {
   const credentials = useAWSStore((state) => state.credentials);
   const [formData, setFormData] = useState<AWSCredentials>({
     accessKey: credentials?.accessKey ?? "",
@@ -30,30 +18,27 @@ export function CredentialsDialog({
     region: credentials?.region ?? "us-east-1",
   });
   const setCredentials = useAWSStore((state) => state.setCredentials);
-  const [validating, setValidating] = useState(false);
+  const clearCredentials = useAWSStore((state) => state.clearCredentials);
+  const validate = api.useMutation("post", "/api/validate");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      setValidating(true);
       if (formData.accessKey && formData.secretKey && formData.region) {
-        const res = await apiService.validateCredentials({
-          accessKey: formData.accessKey,
-          secretKey: formData.secretKey,
-          region: formData.region,
-        });
-        if (res) {
-          setCredentials(formData);
-          onOpenChange(false);
+        const { valid } = await validate.mutateAsync({});
+        setCredentials(formData);
+        if (valid) {
+          router.navigate({ to: "/scan" });
         } else {
+          clearCredentials();
           toast.error("Invalid AWS Credentials.");
         }
       }
     } catch (error) {
+      clearCredentials();
       console.error("Could not validate AWS Credentials", error);
       toast.error("Could not validate AWS Credentials.");
-    } finally {
-      setValidating(false);
     }
   };
 
@@ -64,11 +49,11 @@ export function CredentialsDialog({
     };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>AWS Credentials</DialogTitle>
-        </DialogHeader>
+    <Card>
+      <CardContent className="sm:max-w-md">
+        <CardHeader>
+          <CardTitle>AWS Credentials</CardTitle>
+        </CardHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="accessKey">Access Key</Label>
@@ -103,8 +88,12 @@ export function CredentialsDialog({
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={validating}>
-            {validating ? (
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={validate.isPending}
+          >
+            {validate.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Validating Credentials...
@@ -114,7 +103,7 @@ export function CredentialsDialog({
             )}
           </Button>
         </form>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 }
