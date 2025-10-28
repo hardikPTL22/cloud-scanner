@@ -75,7 +75,7 @@ async def scan(
         region=creds.region,
     )
 
-    update_scan(scan_id, findings=findings, completed=True)
+    update_scan(scan_id, findings, True)
 
     return ScanResponse(scan_id=scan_id, findings=findings)
 

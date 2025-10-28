@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import Any
 import boto3
 from enum import StrEnum
-from datetime import datetime
+from datetime import datetime, timezone
 from scanner.mitre_map import Vulnerability
 
 
@@ -49,12 +49,12 @@ class ScanResponse(BaseModel):
 
 
 class ScanItem(BaseModel):
-    _id: str
+    scan_id: str
     access_key: str
     selected_scans: list[list[str]]
     findings: list[dict[str, Any]] = Field(default_factory=list)
-    completed: bool = False
-    created_at: datetime | None = None
+    completed_at: datetime | None = None
+    created_at: datetime
 
 
 class ListScansResponse(BaseModel):

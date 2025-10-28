@@ -14,11 +14,11 @@ scans_collection = db.get_collection("scans")
 
 def map_object_to_class(obj: dict):
     return ScanItem(
-        _id=str(obj["_id"]),
+        scan_id=str(obj["_id"]),
         access_key=obj["aws_access_key"],
         selected_scans=obj["scans"],
         findings=obj.get("findings", []),
-        completed=obj.get("completed", False),
+        completed_at=obj.get("completed_at"),
         created_at=obj.get("created_at"),
     )
 
@@ -28,8 +28,8 @@ def create_scan(aws_access_key: str, scans: list):
         "aws_access_key": aws_access_key,
         "scans": scans,
         "findings": None,
-        "created_at": datetime.utcnow(),
-        "completed": False,
+        "created_at": datetime.now(timezone.utc),
+        "completed_at": None,
     }
 
     inserted = scans_collection.insert_one(doc)
@@ -38,7 +38,7 @@ def create_scan(aws_access_key: str, scans: list):
 
 def update_scan(scan_id: str, findings: list[VulnerabilityFinding], completed: bool):
     update_fields = {
-        "completed": completed,
+        "completed_at": datetime.now(timezone.utc) if completed else None,
     }
 
     if completed and findings is not None:
