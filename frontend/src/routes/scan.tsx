@@ -9,6 +9,7 @@ import { FindingsTable } from "@/components/findings-table";
 import { ReportsTab } from "@/components/reports-tab";
 import { ServiceSelector } from "@/components/service-selector";
 import { ScanCharts } from "@/components/scan-charts";
+import { FileScanTab } from "@/components/file-scan-tab";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api-client";
@@ -24,6 +25,8 @@ function Page() {
   >({});
   const [findings, setFindings] = useState<Finding[]>([]);
   const [scanId, setScanId] = useState<string | null>(null);
+  const [fileScanFindings, setFileScanFindings] = useState<any[]>([]);
+  const [fileScanId, setFileScanId] = useState<string | null>(null);
   const scan = api.useMutation("post", "/api/scan");
 
   const handleScan = async () => {
@@ -57,67 +60,92 @@ function Page() {
     }
   };
 
+  const handleFileScanComplete = (
+    scanFindings: any[],
+    scanIdResult: string
+  ) => {
+    setFileScanFindings(scanFindings);
+    setFileScanId(scanIdResult);
+  };
+
   return (
     <div className="space-y-6">
-      <ServiceSelector
-        selectedServices={selectedServices}
-        onSelectionChange={setSelectedServices}
-      />
+      <Tabs defaultValue="service-scan" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="service-scan">Service Scan</TabsTrigger>
+          <TabsTrigger value="file-scan">File Scan</TabsTrigger>
+        </TabsList>
 
-      <div className="flex justify-center">
-        <Button
-          onClick={handleScan}
-          disabled={
-            scan.isPending || Object.keys(selectedServices).length === 0
-          }
-          size="lg"
-          className="px-8"
-        >
-          {scan.isPending ? (
+        <TabsContent value="service-scan" className="space-y-6">
+          <ServiceSelector
+            selectedServices={selectedServices}
+            onSelectionChange={setSelectedServices}
+          />
+
+          <div className="flex justify-center">
+            <Button
+              onClick={handleScan}
+              disabled={
+                scan.isPending || Object.keys(selectedServices).length === 0
+              }
+              size="lg"
+              className="px-8"
+            >
+              {scan.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Scanning...
+                </>
+              ) : (
+                "Start Security Scan"
+              )}
+            </Button>
+          </div>
+
+          {scanId && findings.length > 0 && (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Scanning...
+              <ScanCharts findings={findings} />
+
+              <Tabs defaultValue="findings" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="findings">
+                    Scan Results ({findings.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="reports">Reports</TabsTrigger>
+                </TabsList>
+                <TabsContent value="findings" className="mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Security Findings</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FindingsTable findings={findings} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="reports" className="mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Download Reports</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ReportsTab scanId={scanId} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </>
-          ) : (
-            "Start Security Scan"
           )}
-        </Button>
-      </div>
+        </TabsContent>
 
-      {scanId && findings.length > 0 && (
-        <>
-          <ScanCharts findings={findings} />
-
-          <Tabs defaultValue="findings" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="findings">
-                Scan Results ({findings.length})
-              </TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-            </TabsList>
-            <TabsContent value="findings" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Security Findings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FindingsTable findings={findings} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="reports" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Download Reports</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ReportsTab scanId={scanId} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </>
-      )}
+        <TabsContent value="file-scan" className="space-y-6">
+          <FileScanTab
+            onScanComplete={handleFileScanComplete}
+            findings={fileScanFindings}
+            scanId={fileScanId}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

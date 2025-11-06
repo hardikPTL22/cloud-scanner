@@ -1,16 +1,34 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Any
+from typing import Any, Optional
 import boto3
 from enum import StrEnum
-from datetime import datetime, timezone
-from scanner.mitre_map import Vulnerability
+from datetime import datetime
 
 
 class VulnerabilityFinding(BaseModel):
-    type: Vulnerability
+    type: str
     name: str
     severity: str
     details: str
+
+
+class FileScanFinding(BaseModel):
+    file_key: str
+    file_name: str
+    severity: str
+    status: str
+    malicious_count: int
+    suspicious_count: int
+    undetected_count: int
+    harmless_count: int
+    total_vendors: int
+    scan_date: str
+    permalink: str
+    file_size: int
+    file_type: str
+    md5: str
+    sha256: str
+    detected_engines: list[str]
 
 
 class ScanRequest(BaseModel):
@@ -65,10 +83,30 @@ class ScanResponse(BaseModel):
 class ScanItem(BaseModel):
     scan_id: str
     access_key: str
-    selected_scans: list[list[str]]
-    findings: list[dict[str, Any]] = Field(default_factory=list)
-    completed_at: datetime | None = None
+    scan_type: str = "service"
+    selected_scans: Optional[list[str]] = None
+    bucket: Optional[str] = None
+    findings: Optional[list[dict[str, Any]]] = None
+    completed_at: Optional[datetime] = None
     created_at: datetime
+    metadata: Optional[dict[str, Any]] = None
+
+    @property
+    def is_service_scan(self) -> bool:
+        return self.scan_type == "service"
+
+    @property
+    def is_file_scan(self) -> bool:
+        return self.scan_type == "file"
+
+    @property
+    def scan_label(self) -> str:
+        if self.is_service_scan:
+            service_count = len(self.selected_scans) if self.selected_scans else 0
+            return f"☁️ Cloud Service ({service_count} services)"
+        else:
+            file_count = self.metadata.get("file_count", 0) if self.metadata else 0
+            return f"📁 File Scan ({file_count} files)"
 
 
 class ListScansResponse(BaseModel):
@@ -81,3 +119,33 @@ class BucketsResponse(BaseModel):
 
 class FilesResponse(BaseModel):
     files: list[str]
+
+
+class FileItem(BaseModel):
+    key: str
+    name: str
+    type: str
+    size: Optional[int] = None
+    lastModified: Optional[str] = None
+    children: Optional[list["FileItem"]] = None
+    isExpanded: Optional[bool] = False
+
+
+class ListFilesRequest(BaseModel):
+    service: str
+    location: str
+
+
+class ListFilesResponse(BaseModel):
+    files: list[FileItem]
+
+
+class ScanFilesRequest(BaseModel):
+    service: str
+    location: str
+    files: list[str]
+
+
+class ScanFilesResponse(BaseModel):
+    scan_id: str
+    findings: list[FileScanFinding]

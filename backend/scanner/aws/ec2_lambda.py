@@ -17,14 +17,12 @@ def find_lambda_overpermissive_roles(lambda_client, iam_client, findings):
                 ).get("AttachedPolicies", [])
                 for p in attached_policies:
                     policy_arn = p.get("PolicyArn")
-                    # Get default policy version to inspect
                     pol = iam_client.get_policy(PolicyArn=policy_arn)
                     version_id = pol["Policy"]["DefaultVersionId"]
                     version = iam_client.get_policy_version(
                         PolicyArn=policy_arn, VersionId=version_id
                     )
                     doc = version["PolicyVersion"]["Document"]
-                    # Check each statement for wildcards
                     for stmt in doc.get("Statement", []):
                         actions = stmt.get("Action")
                         resources = stmt.get("Resource")

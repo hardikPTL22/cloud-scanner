@@ -14,38 +14,78 @@ import { api } from "@/lib/api-client";
 
 interface ReportsTabProps {
   scanId: string;
+  scanType?: "service" | "file";
 }
 
-export function ReportsTab({ scanId }: ReportsTabProps) {
+interface GenerateReportResponse {
+  report_url: string;
+}
+
+export function ReportsTab({ scanId, scanType = "service" }: ReportsTabProps) {
   const { credentials } = useAWSStore();
   const [downloading, setDownloading] = useState<string | null>(null);
-  const generateUrl = api.useMutation("post", "/api/generate-report");
 
-  const downloadReport = (format: "csv" | "json" | "pdf") => {
+  const generateServiceUrl = api.useMutation("post", "/api/generate-report");
+  const generateFileUrl = api.useMutation(
+    "post",
+    "/api/generate-file-report" as any
+  );
+
+  const downloadReport = async (format: "csv" | "json" | "pdf") => {
     if (!credentials) {
       toast.error("No credentials available");
       return;
     }
 
     setDownloading(format);
-    generateUrl
-      .mutateAsync({
+    try {
+      const mutation =
+        scanType === "file" ? generateFileUrl : generateServiceUrl;
+
+      const response = await mutation.mutateAsync({
         body: {
           scan_id: scanId,
           format: format,
         },
-      })
-      .then(({ report_url }) => {
-        window.open(`http://localhost:5000${report_url}`, "_blank")?.focus();
-        toast.success(`${format.toUpperCase()} report downloaded successfully`);
-      })
-      .catch((error) => {
-        console.error("Error generating report:", error);
-        toast.error("Failed to generate report");
-      })
-      .finally(() => {
-        setDownloading(null);
+      } as any);
+
+      // Type assertion to extract the report URL
+      const reportData = response as unknown as GenerateReportResponse;
+      const { report_url } = reportData;
+
+      // Fetch the report with credentials
+      const headers = new Headers();
+      headers.append("X-AWS-Access-Key", credentials.access_key);
+      headers.append("X-AWS-Secret-Key", credentials.secret_key);
+      headers.append("X-AWS-Region", credentials.region || "us-east-1");
+
+      const reportResponse = await fetch(`http://localhost:5000${report_url}`, {
+        headers,
       });
+
+      if (!reportResponse.ok) {
+        throw new Error(
+          `HTTP ${reportResponse.status}: ${reportResponse.statusText}`
+        );
+      }
+
+      const blob = await reportResponse.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `${scanType}-scan-report.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
+
+      toast.success(`${format.toUpperCase()} report downloaded successfully`);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error("Failed to generate or download report");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   const reportOptions = [
@@ -71,24 +111,27 @@ export function ReportsTab({ scanId }: ReportsTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-muted-foreground">Generate reports</div>
+      <div className="text-sm text-slate-400">
+        Generate {scanType} scan reports
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {reportOptions.map(({ format, title, description, icon: Icon }) => (
-          <Card key={format} className="relative">
+          <Card key={format} className="border-slate-800 bg-slate-900/50">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <Icon className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">{title}</CardTitle>
+                <Icon className="h-5 w-5 text-cyan-400" />
+                <CardTitle className="text-lg text-slate-100">
+                  {title}
+                </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{description}</p>
+              <p className="text-sm text-slate-400">{description}</p>
               <Button
                 onClick={() => downloadReport(format)}
                 disabled={downloading !== null}
-                className="w-full"
-                variant={downloading === format ? "secondary" : "default"}
+                className="w-full bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold"
               >
                 {downloading === format ? (
                   <>
