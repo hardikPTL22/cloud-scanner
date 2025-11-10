@@ -155,7 +155,6 @@ async def check_virustotal_hash(
                 "permalink": f"https://www.virustotal.com/gui/file/{sha256}",
                 "file_size": getattr(file_obj, "size", 0),
                 "file_type": getattr(file_obj, "type_description", "Unknown"),
-                "detected_engines": detected_engines[:10],
             }
 
     except Exception as e:
@@ -189,6 +188,11 @@ async def scan_single_file(
                 "md5": md5,
                 "sha256": sha256,
                 **vt_result,
+                "details": (
+                    f"Detected by {len(vt_result.get('detected_engines', []))} engines: {', '.join(vt_result.get('detected_engines', []))}"
+                    if vt_result.get("detected_engines")
+                    else "No malicious detections"
+                ),
             }
             logger.info(f"Scanned {key}: {vt_result['status']}")
             return result
@@ -210,6 +214,7 @@ async def scan_single_file(
                 "md5": md5,
                 "sha256": sha256,
                 "detected_engines": [],
+                "details": "No VirusTotal scan data available",
             }
 
     except Exception as e:

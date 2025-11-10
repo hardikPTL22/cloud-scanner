@@ -14,7 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReportsTab } from "@/components/reports-tab";
 import { ScanCharts } from "@/components/scan-charts";
+import { ScanFindingCard } from "@/components/ScanFindingCard";
 import { toast } from "sonner";
+
 import {
   Loader2,
   Folder,
@@ -24,8 +26,6 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
-  ExternalLink,
-  Copy,
   AlertCircle,
 } from "lucide-react";
 import { api } from "@/lib/api-client";
@@ -343,7 +343,7 @@ export function FileScanTab({
                 value={selectedService}
                 onValueChange={setSelectedService}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="space-x-2">
                   <div className="flex items-center gap-2">
                     {selectedServiceData ? (
                       <>
@@ -501,7 +501,7 @@ export function FileScanTab({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   {maliciousCount > 0 ? (
-                    <AlertCircle className="h-5 w-5 text-destructive" />
+                    <AlertCircle className="h-5 w-5 text-red-800" />
                   ) : suspiciousCount > 0 ? (
                     <AlertTriangle className="h-5 w-5 text-orange-500" />
                   ) : (
@@ -518,32 +518,39 @@ export function FileScanTab({
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-xs text-muted-foreground font-medium mb-1">
+                  {/* MALICIOUS */}
+                  <div className="relative rounded-md border border-neutral-800 bg-neutral-950/60 p-4 before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-red-500 before:rounded-l-md">
+                    <div className="text-xs text-muted-foreground mb-1">
                       Malicious
                     </div>
-                    <div className="text-2xl font-bold text-destructive">
+                    <div className="text-2xl font-bold text-red-500">
                       {maliciousCount}
                     </div>
                   </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-xs text-muted-foreground font-medium mb-1">
+
+                  {/* SUSPICIOUS */}
+                  <div className="relative rounded-md border border-neutral-800 bg-neutral-950/60 p-4 before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-amber-500 before:rounded-l-md">
+                    <div className="text-xs text-muted-foreground mb-1">
                       Suspicious
                     </div>
-                    <div className="text-2xl font-bold text-orange-500">
+                    <div className="text-2xl font-bold text-amber-500">
                       {suspiciousCount}
                     </div>
                   </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-xs text-muted-foreground font-medium mb-1">
+
+                  {/* CLEAN */}
+                  <div className="relative rounded-md border border-neutral-800 bg-neutral-950/60 p-4 before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-emerald-500 before:rounded-l-md">
+                    <div className="text-xs text-muted-foreground mb-1">
                       Clean
                     </div>
-                    <div className="text-2xl font-bold text-green-500">
+                    <div className="text-2xl font-bold text-emerald-500">
                       {cleanCount}
                     </div>
                   </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-xs text-muted-foreground font-medium mb-1">
+
+                  {/* TOTAL DETECTIONS */}
+                  <div className="relative rounded-md border border-neutral-800 bg-neutral-950/60 p-4 before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-neutral-500 before:rounded-l-md">
+                    <div className="text-xs text-muted-foreground mb-1">
                       Total Detections
                     </div>
                     <div className="text-2xl font-bold">
@@ -573,7 +580,7 @@ export function FileScanTab({
                 <CardContent>
                   {findings.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
+                      <CheckCircle2 className="h-12 w-12 text-rose-950 mb-4" />
                       <h3 className="text-xl font-semibold mb-2">All Clean</h3>
                       <p className="text-muted-foreground max-w-md">
                         No malicious files or threats were detected during the
@@ -581,188 +588,14 @@ export function FileScanTab({
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {findings.map((finding: any, idx: number) => {
-                        const isMalicious = finding.status === "Malicious";
-                        const isSuspicious = finding.status === "Suspicious";
-
-                        return (
-                          <div
-                            key={idx}
-                            className={`rounded-lg border p-4 ${
-                              isMalicious
-                                ? "border-destructive/50 bg-destructive/5"
-                                : isSuspicious
-                                ? "border-orange-500/50 bg-orange-500/5"
-                                : "border-green-500/50 bg-green-500/5"
-                            }`}
-                          >
-                            <div className="space-y-4">
-                              {/* Header */}
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex items-start gap-3 flex-1 min-w-0">
-                                  <div className="mt-0.5">
-                                    {isMalicious || isSuspicious ? (
-                                      <AlertTriangle
-                                        className={`h-5 w-5 ${
-                                          isMalicious
-                                            ? "text-destructive"
-                                            : "text-orange-500"
-                                        }`}
-                                      />
-                                    ) : (
-                                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold truncate">
-                                      {finding.file_name}
-                                    </h3>
-                                    <p className="text-xs text-muted-foreground truncate font-mono mt-1">
-                                      {finding.file_key}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <Badge
-                                    variant={
-                                      isMalicious
-                                        ? "destructive"
-                                        : isSuspicious
-                                        ? "secondary"
-                                        : "outline"
-                                    }
-                                  >
-                                    {finding.severity}
-                                  </Badge>
-
-                                  {finding.permalink && (
-                                    <Button variant="outline" size="sm" asChild>
-                                      <a
-                                        href={finding.permalink}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1"
-                                      >
-                                        VirusTotal
-                                        <ExternalLink className="h-3 w-3" />
-                                      </a>
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Stats Grid */}
-                              <div className="grid grid-cols-4 gap-3 p-3 bg-muted/50 rounded-md">
-                                <div className="text-center">
-                                  <div className="text-xs text-muted-foreground font-medium mb-1">
-                                    Malicious
-                                  </div>
-                                  <div className="text-xl font-bold text-destructive">
-                                    {finding.malicious_count || 0}
-                                  </div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-xs text-muted-foreground font-medium mb-1">
-                                    Suspicious
-                                  </div>
-                                  <div className="text-xl font-bold text-orange-500">
-                                    {finding.suspicious_count || 0}
-                                  </div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-xs text-muted-foreground font-medium mb-1">
-                                    Undetected
-                                  </div>
-                                  <div className="text-xl font-bold text-muted-foreground">
-                                    {finding.undetected_count || 0}
-                                  </div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-xs text-muted-foreground font-medium mb-1">
-                                    Harmless
-                                  </div>
-                                  <div className="text-xl font-bold text-green-500">
-                                    {finding.harmless_count || 0}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Detected Engines */}
-                              {finding.detected_engines &&
-                                finding.detected_engines.length > 0 && (
-                                  <div className="space-y-2">
-                                    <div className="text-xs font-medium text-muted-foreground">
-                                      Detected by{" "}
-                                      {finding.detected_engines.length} engines
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                      {finding.detected_engines
-                                        .slice(0, 10)
-                                        .map((engine: string, i: number) => (
-                                          <Badge key={i} variant="secondary">
-                                            {engine}
-                                          </Badge>
-                                        ))}
-                                      {finding.detected_engines.length > 10 && (
-                                        <Badge variant="outline">
-                                          +
-                                          {finding.detected_engines.length - 10}{" "}
-                                          more
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                              {/* File Details */}
-                              <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="space-y-1">
-                                  <div className="text-xs text-muted-foreground">
-                                    Type
-                                  </div>
-                                  <div className="font-mono">
-                                    {finding.file_type || "Unknown"}
-                                  </div>
-                                </div>
-                                <div className="space-y-1">
-                                  <div className="text-xs text-muted-foreground">
-                                    Size
-                                  </div>
-                                  <div className="font-mono">
-                                    {formatSize(finding.file_size)}
-                                  </div>
-                                </div>
-                                {finding.sha256 && (
-                                  <div className="col-span-2 space-y-1">
-                                    <div className="flex items-center justify-between">
-                                      <div className="text-xs text-muted-foreground">
-                                        SHA256 Hash
-                                      </div>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(
-                                            finding.sha256
-                                          );
-                                          toast.success("Hash copied!");
-                                        }}
-                                      >
-                                        <Copy className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                    <div className="font-mono text-xs break-all">
-                                      {finding.sha256}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="space-y-3">
+                      {findings.map((finding: any) => (
+                        <ScanFindingCard
+                          key={finding.sha256}
+                          finding={finding}
+                          formatSize={formatSize}
+                        />
+                      ))}
                     </div>
                   )}
                 </CardContent>

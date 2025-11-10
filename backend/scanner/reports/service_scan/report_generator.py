@@ -17,9 +17,10 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
-from scanner.mitre_map import MITRE_MAP
+from scanner.mitre_maps_registry import MITRE_MAPS
 import matplotlib.pyplot as plt
 import io
+
 
 styles = getSampleStyleSheet()
 
@@ -31,16 +32,25 @@ def color_to_hex(color_obj):
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
-def _render_mitre_console(key):
-    mappings = MITRE_MAP.get(key, {})
+def _get_mitre_data(service, vuln_type):
+    service_map = MITRE_MAPS.get(service, {})
+    return service_map.get(vuln_type, {})
+
+
+def _render_mitre_console(service, vuln_type):
+    mitre_data = _get_mitre_data(service, vuln_type)
     lines = []
-    for t in mappings.get("techniques", []):
-        lines.append(f"    - {t['id']} | {t['name']}")
-        lines.append(f"      desc: {t.get('desc','')}")
-        lines.append(f"      remediation: {t.get('remediation','')}")
-    note = mappings.get("note")
-    if note:
-        lines.append(f"    Note: {note}")
+
+    mitre_id = mitre_data.get("mitre_id", "")
+    mitre_name = mitre_data.get("mitre_name", "")
+    description = mitre_data.get("description", "")
+    remediation = mitre_data.get("remediation", "")
+
+    if mitre_id and mitre_name:
+        lines.append(f"    - {mitre_id} | {mitre_name}")
+        lines.append(f"      desc: {description}")
+        lines.append(f"      remediation: {remediation}")
+
     return "\n".join(lines)
 
 
@@ -49,16 +59,18 @@ def print_report(findings):
     if not findings:
         print("No issues detected.")
         return
+
     by_type = {}
     for f in findings:
         by_type.setdefault(f["type"], []).append(f)
+
     for t, items in by_type.items():
         heading = t.replace("_", " ").title()
         print(f"{heading}:")
         for item in items:
             print(f" - {item['name']}  (Severity: {item.get('severity','Unknown')})")
-            key = item["type"]
-            print(_render_mitre_console(key))
+            service = item.get("service", "unknown")
+            print(_render_mitre_console(service, item["type"]))
             if item.get("details"):
                 print(f"    Details: {item['details']}")
         print("---------------------------------\n")
@@ -99,24 +111,28 @@ def write_csv(findings, report_folder="report"):
 
 
 def _render_mitre_table(finding):
-    from reportlab.platypus import Paragraph
+    service = finding.get("service", "unknown")
+    vuln_type = finding["type"]
+    mitre_data = _get_mitre_data(service, vuln_type)
 
     data = [["Technique ID", "Name", "Description", "Remediation"]]
-    mappings = MITRE_MAP.get(finding["type"], {})
-    for t in mappings.get("techniques", []):
+
+    mitre_id = mitre_data.get("mitre_id", "")
+    mitre_name = mitre_data.get("mitre_name", "")
+    description = mitre_data.get("description", "")
+    remediation = mitre_data.get("remediation", "")
+
+    if mitre_id:
         data.append(
             [
-                Paragraph(t["id"], styles["Normal"]),
-                Paragraph(t["name"], styles["Normal"]),
-                Paragraph(t.get("desc", ""), styles["Normal"]),
-                Paragraph(t.get("remediation", ""), styles["Normal"]),
+                Paragraph(mitre_id, styles["Normal"]),
+                Paragraph(mitre_name, styles["Normal"]),
+                Paragraph(description, styles["Normal"]),
+                Paragraph(remediation, styles["Normal"]),
             ]
         )
 
-    from reportlab.lib.units import inch
-
     col_widths = [1 * inch, 1.5 * inch, 3 * inch, 3 * inch]
-
     table = Table(data, colWidths=col_widths, repeatRows=1)
     style = TableStyle(
         [
@@ -144,15 +160,18 @@ def generate_vulnerability_pie_chart(findings):
     for f in findings:
         sev = f.get("severity", "Unknown")
         counts[sev] = counts.get(sev, 0) + 1
+
     labels = []
     sizes = []
     colors_map = {"High": "red", "Medium": "orange", "Low": "green"}
     pie_colors = []
+
     for sev in ["High", "Medium", "Low"]:
         if counts.get(sev, 0) > 0:
             labels.append(sev)
             sizes.append(counts[sev])
             pie_colors.append(colors_map[sev])
+
     plt.figure(figsize=(4, 4))
     plt.pie(sizes, labels=labels, colors=pie_colors, autopct="%1.1f%%", startangle=140)
     plt.title("Vulnerabilities by Severity")
@@ -205,6 +224,7 @@ def generate_pdf_report(findings, report_folder="report"):
             textColor=colors.HexColor("#003366"),
         )
     )
+
     severity_colors = {"High": colors.red, "Medium": colors.orange, "Low": colors.green}
 
     elements = []
@@ -271,9 +291,13 @@ def generate_pdf_report(findings, report_folder="report"):
     )
     seen = set()
     for f in findings:
-        key = f["type"]
-        for t in MITRE_MAP.get(key, {}).get("techniques", []):
-            seen.add((t["id"], t["name"]))
+        service = f.get("service", "unknown")
+        mitre_data = _get_mitre_data(service, f["type"])
+        mitre_id = mitre_data.get("mitre_id", "")
+        mitre_name = mitre_data.get("mitre_name", "")
+        if mitre_id and mitre_name:
+            seen.add((mitre_id, mitre_name))
+
     if seen:
         for tid, tname in sorted(seen):
             elements.append(Paragraph(f"- {tid} | {tname}", styles["Normal"]))

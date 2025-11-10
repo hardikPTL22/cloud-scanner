@@ -721,7 +721,7 @@ export function Page() {
                           </TableCell>
                           <TableCell className="text-center">
                             <Link
-                              to="/scans/$scanId"
+                              to="/scans/file/$scanId"
                               params={{ scanId: scan.scan_id }}
                               className="text-sky-400 hover:text-sky-300"
                             >

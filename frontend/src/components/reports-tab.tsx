@@ -131,7 +131,7 @@ export function ReportsTab({ scanId, scanType = "service" }: ReportsTabProps) {
               <Button
                 onClick={() => downloadReport(format)}
                 disabled={downloading !== null}
-                className="w-full bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold"
+                className="w-full bg-sky-950 hover:bg-sky-500 text-white font-semibold"
               >
                 {downloading === format ? (
                   <>

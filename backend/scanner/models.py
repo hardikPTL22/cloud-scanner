@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Any, Optional
+from typing import Optional, Any
+from typing import Union, List
 import boto3
 from enum import StrEnum
 from datetime import datetime
@@ -9,7 +10,12 @@ class VulnerabilityFinding(BaseModel):
     type: str
     name: str
     severity: str
-    details: str
+    details: str = ""
+    service: str = "unknown"
+    mitre_id: str = ""
+    mitre_name: str = ""
+    description: str = ""
+    remediation: str = ""
 
 
 class FileScanFinding(BaseModel):
@@ -28,7 +34,8 @@ class FileScanFinding(BaseModel):
     file_type: str
     md5: str
     sha256: str
-    detected_engines: list[str]
+    detected_engines: Optional[List[str]] = []
+    details: str = ""
 
 
 class ScanRequest(BaseModel):
@@ -72,7 +79,9 @@ class AwsCredentials(BaseModel):
 
 
 class GetScanResponse(BaseModel):
-    findings: list[VulnerabilityFinding] = Field(default_factory=list)
+    findings: List[Union[VulnerabilityFinding, FileScanFinding]] = Field(
+        default_factory=list
+    )
 
 
 class ScanResponse(BaseModel):

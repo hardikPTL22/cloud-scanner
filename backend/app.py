@@ -132,7 +132,7 @@ async def get_scans(creds: AwsCredentials = Depends(validate_aws_credentials)):
     return ListScansResponse(scans=scans)
 
 
-@app.get("/api/scans/{scan_id}", response_model=GetScanResponse)
+@app.get("/api/scans/{scan_id}")
 async def get_scan_details(
     scan_id: str, creds: AwsCredentials = Depends(validate_aws_credentials)
 ):
@@ -140,7 +140,14 @@ async def get_scan_details(
 
     if not scan or scan["aws_access_key"] != creds.access_key:
         raise HTTPException(status_code=404, detail="Scan not found")
-    return GetScanResponse(findings=scan.get("findings", []))
+
+    scan_type = scan.get("scan_type", "service")
+    findings = scan.get("findings", [])
+
+    if scan_type == "file":
+        return ScanFilesResponse(scan_id=scan_id, findings=findings)
+    else:
+        return GetScanResponse(findings=findings)
 
 
 @app.get("/api/reports/service/{token}", include_in_schema=False)
@@ -303,6 +310,7 @@ async def scan_files_endpoint(
 
                 findings = []
                 for result in scan_results:
+                    result.setdefault("detected_engines", [])
                     if result.get("status") not in ["error", "timeout"]:
                         finding = FileScanFinding(**result)
                         findings.append(finding)
