@@ -95,20 +95,6 @@ def find_ssm_parameters_without_tags(ssm_client, findings):
 
 
 @inject_clients(clients=["ssm"])
-def find_ssm_documents_without_description(ssm_client, findings):
-    paginator = ssm_client.get_paginator("list_documents")
-    for page in paginator.paginate():
-        for doc in page.get("DocumentIdentifiers", []):
-            doc_name = doc.get("Name")
-            if not doc.get("Description"):
-                findings.append(
-                    new_vulnerability(
-                        SSMVulnerability.ssm_doc_no_description, doc_name, "ssm"
-                    )
-                )
-
-
-@inject_clients(clients=["ssm"])
 def find_ssm_patch_manager_not_enabled(ssm_client, findings):
     try:
         patch_baselines = ssm_client.describe_patch_baselines()
@@ -257,24 +243,6 @@ def find_ssm_parameters_unchanged_90_days(ssm_client, findings):
                             SSMVulnerability.ssm_param_stale,
                             param.get("Name"),
                             "ssm",
-                        )
-                    )
-
-
-@inject_clients(clients=["ssm"])
-def find_ssm_documents_unchanged_90_days(ssm_client, findings):
-    import datetime
-
-    paginator = ssm_client.get_paginator("list_documents")
-    for page in paginator.paginate():
-        for doc in page.get("DocumentIdentifiers", []):
-            created_date = doc.get("CreatedDate")
-            if created_date:
-                age = (datetime.datetime.now(created_date.tzinfo) - created_date).days
-                if age > 90:
-                    findings.append(
-                        new_vulnerability(
-                            SSMVulnerability.ssm_doc_stale, doc.get("Name"), "ssm"
                         )
                     )
 

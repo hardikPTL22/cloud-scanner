@@ -7,7 +7,6 @@ class SSMVulnerability(str, Enum):
     ssm_document_public = "ssm_document_public"
     ssm_no_session_logging = "ssm_no_session_logging"
     ssm_param_no_tags = "ssm_param_no_tags"
-    ssm_doc_no_description = "ssm_doc_no_description"
     ssm_patch_manager_disabled = "ssm_patch_manager_disabled"
     ssm_maintenance_window_no_logging = "ssm_maintenance_window_no_logging"
     ssm_no_host_mgmt_role = "ssm_no_host_mgmt_role"
@@ -17,7 +16,6 @@ class SSMVulnerability(str, Enum):
     ssm_doc_no_versioning = "ssm_doc_no_versioning"
     ssm_param_permissive = "ssm_param_permissive"
     ssm_param_stale = "ssm_param_stale"
-    ssm_doc_stale = "ssm_doc_stale"
     ssm_no_inventory = "ssm_no_inventory"
     ssm_compliance_disabled = "ssm_compliance_disabled"
     ssm_state_manager_disabled = "ssm_state_manager_disabled"
@@ -47,11 +45,9 @@ SSM_SEVERITY = {
     "ssm_param_no_policy": "Medium",
     "ssm_automation_no_role": "Medium",
     "ssm_param_no_tags": "Low",
-    "ssm_doc_no_description": "Low",
     "ssm_no_ops_center": "Low",
     "ssm_doc_no_versioning": "Low",
     "ssm_param_stale": "Low",
-    "ssm_doc_stale": "Low",
     "ssm_no_inventory": "Low",
     "ssm_param_limit_high": "Low",
     "ssm_no_change_calendar": "Low",
@@ -161,12 +157,6 @@ SSM_MITRE_MAP = {
         "description": "SSM parameter not tagged",
         "remediation": "Add tags to all SSM parameters",
     },
-    "ssm_doc_no_description": {
-        "mitre_id": "T1087.004",
-        "mitre_name": "Enumerate Cloud Accounts",
-        "description": "SSM document lacks description",
-        "remediation": "Add descriptive name and description to documents",
-    },
     "ssm_no_ops_center": {
         "mitre_id": "T1562.008",
         "mitre_name": "Indicator Removal: Disable/Modify Cloud Logs",
@@ -184,12 +174,6 @@ SSM_MITRE_MAP = {
         "mitre_name": "Enumerate Cloud Accounts",
         "description": "SSM parameter unchanged for 90+ days",
         "remediation": "Review and remove stale parameters",
-    },
-    "ssm_doc_stale": {
-        "mitre_id": "T1087.004",
-        "mitre_name": "Enumerate Cloud Accounts",
-        "description": "SSM document unchanged for 90+ days",
-        "remediation": "Review and remove stale documents",
     },
     "ssm_no_inventory": {
         "mitre_id": "T1087.004",

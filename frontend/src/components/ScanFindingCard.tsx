@@ -27,7 +27,7 @@ export function ScanFindingCard({ finding, formatSize }: ScanFindingCardProps) {
   return (
     <div
       className={`
-    relative border-l-2 p-6 my-4 bg-black shadow-[0_0_0_1px_rgba(255,255,255,0.03)]
+    relative border-l-2 p-6 my-4 bg-dark:border-slate-700 dark:bg-slate-950
     ${
       isMalicious
         ? "border-red-500/80"
