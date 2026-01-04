@@ -25,5 +25,5 @@
       ]
     }
   },
-  "include": ["src"]
+  "include": ["src", "src/components/grc/ComplianceTrendChart.tsx"]
 }

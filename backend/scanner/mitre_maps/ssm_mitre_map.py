@@ -4,7 +4,7 @@ from enum import Enum
 class SSMVulnerability(str, Enum):
     ssm_parameter_unencrypted = "ssm_parameter_unencrypted"
     ssm_param_public_tier = "ssm_param_public_tier"
-    ssm_document_public = "ssm_document_public"
+    # ssm_document_public = "ssm_document_public"
     ssm_no_session_logging = "ssm_no_session_logging"
     ssm_param_no_tags = "ssm_param_no_tags"
     ssm_patch_manager_disabled = "ssm_patch_manager_disabled"
@@ -29,7 +29,7 @@ class SSMVulnerability(str, Enum):
 
 SSM_SEVERITY = {
     "ssm_parameter_unencrypted": "High",
-    "ssm_document_public": "High",
+    # "ssm_document_public": "High",
     "ssm_patch_manager_disabled": "High",
     "ssm_default_kms_key": "High",
     "ssm_doc_hardcoded_creds": "Critical",

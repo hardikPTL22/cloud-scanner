@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as GrcRouteImport } from './routes/grc'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ScansScanIdRouteImport } from './routes/scans.$scanId'
 import { Route as ScansFileScanIdRouteImport } from './routes/scans/file/$scanId'
@@ -23,6 +24,11 @@ const ScanRoute = ScanRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GrcRoute = GrcRouteImport.update({
+  id: '/grc',
+  path: '/grc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,6 +49,7 @@ const ScansFileScanIdRoute = ScansFileScanIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/grc': typeof GrcRoute
   '/history': typeof HistoryRoute
   '/scan': typeof ScanRoute
   '/scans/$scanId': typeof ScansScanIdRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/grc': typeof GrcRoute
   '/history': typeof HistoryRoute
   '/scan': typeof ScanRoute
   '/scans/$scanId': typeof ScansScanIdRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/grc': typeof GrcRoute
   '/history': typeof HistoryRoute
   '/scan': typeof ScanRoute
   '/scans/$scanId': typeof ScansScanIdRoute
@@ -67,15 +76,23 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/grc'
     | '/history'
     | '/scan'
     | '/scans/$scanId'
     | '/scans/file/$scanId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/history' | '/scan' | '/scans/$scanId' | '/scans/file/$scanId'
+  to:
+    | '/'
+    | '/grc'
+    | '/history'
+    | '/scan'
+    | '/scans/$scanId'
+    | '/scans/file/$scanId'
   id:
     | '__root__'
     | '/'
+    | '/grc'
     | '/history'
     | '/scan'
     | '/scans/$scanId'
@@ -84,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GrcRoute: typeof GrcRoute
   HistoryRoute: typeof HistoryRoute
   ScanRoute: typeof ScanRoute
   ScansScanIdRoute: typeof ScansScanIdRoute
@@ -104,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grc': {
+      id: '/grc'
+      path: '/grc'
+      fullPath: '/grc'
+      preLoaderRoute: typeof GrcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -132,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GrcRoute: GrcRoute,
   HistoryRoute: HistoryRoute,
   ScanRoute: ScanRoute,
   ScansScanIdRoute: ScansScanIdRoute,

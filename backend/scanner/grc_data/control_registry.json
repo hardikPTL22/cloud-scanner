@@ -1,0 +1,12 @@
+{
+  "S3_PUBLIC_BUCKET": {
+    "iso27001": ["A.8.12"],
+    "nist_csf": ["PR.AC-3"],
+    "cis_aws": ["2.1"]
+  },
+  "S3_UNENCRYPTED_BUCKET": {
+    "iso27001": ["A.8.24"],
+    "nist_csf": ["PR.DS-1"],
+    "cis_aws": ["2.2"]
+  }
+}

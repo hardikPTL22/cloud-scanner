@@ -3,13 +3,30 @@ from scanner.mitre_maps.cloudtrail_mitre_map import CloudTrailVulnerability
 from scanner.utils import new_vulnerability
 from scanner.aws.decorator import inject_clients
 import json
+from concurrent.futures import ThreadPoolExecutor
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def fetch_trails(cloudtrail_client, include_shadow=False):
+    """Fetch all CloudTrail trails once for reuse across checks"""
+    try:
+        return cloudtrail_client.describe_trails(
+            includeShadowTrails=include_shadow
+        ).get("trailList", [])
+    except Exception as e:
+        logger.error(f"Error fetching trails: {e}")
+        return []
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_not_logging(cloudtrail_client, findings):
-    trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
-    for t in trails_resp.get("trailList", []):
-        name = t.get("Name") or t.get("TrailARN")
+def find_cloudtrail_not_logging(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_logging(trail):
+        name = trail.get("Name") or trail.get("TrailARN")
         try:
             status = cloudtrail_client.get_trail_status(Name=name)
             if not status.get("IsLogging"):
@@ -21,15 +38,20 @@ def find_cloudtrail_not_logging(cloudtrail_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_logging, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_not_multi_region(cloudtrail_client, findings):
-    trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
-    for t in trails_resp.get("trailList", []):
-        if not t.get("IsMultiRegionTrail", False):
-            name = t.get("Name") or t.get("TrailARN")
+def find_cloudtrail_not_multi_region(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_multi_region(trail):
+        if not trail.get("IsMultiRegionTrail", False):
+            name = trail.get("Name") or trail.get("TrailARN")
             findings.append(
                 new_vulnerability(
                     CloudTrailVulnerability.cloudtrail_not_multi_region,
@@ -38,13 +60,18 @@ def find_cloudtrail_not_multi_region(cloudtrail_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_multi_region, trails)
+
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_no_log_file_validation(cloudtrail_client, findings):
-    trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
-    for t in trails_resp.get("trailList", []):
-        if not t.get("LogFileValidationEnabled", False):
-            name = t.get("Name") or t.get("TrailARN")
+def find_cloudtrail_no_log_file_validation(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_validation(trail):
+        if not trail.get("LogFileValidationEnabled", False):
+            name = trail.get("Name") or trail.get("TrailARN")
             findings.append(
                 new_vulnerability(
                     CloudTrailVulnerability.cloudtrail_no_log_file_validation,
@@ -53,12 +80,17 @@ def find_cloudtrail_no_log_file_validation(cloudtrail_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_validation, trails)
+
 
 @inject_clients(clients=["cloudtrail", "s3"])
-def find_cloudtrail_bucket_public(cloudtrail_client, s3_client, findings):
-    trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=False)
-    for t in trails_resp.get("trailList", []):
-        bucket_name = t.get("S3BucketName")
+def find_cloudtrail_bucket_public(cloudtrail_client, s3_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_bucket_public(trail):
+        bucket_name = trail.get("S3BucketName")
         if bucket_name:
             try:
                 acl = s3_client.get_bucket_acl(Bucket=bucket_name)
@@ -77,15 +109,20 @@ def find_cloudtrail_bucket_public(cloudtrail_client, s3_client, findings):
                         )
                         break
             except ClientError:
-                continue
+                pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_bucket_public, trails)
 
 
 @inject_clients(clients=["cloudtrail", "s3"])
-def find_cloudtrail_encryption_disabled(cloudtrail_client, s3_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_encryption_disabled(
+    cloudtrail_client, s3_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_encryption(trail):
         s3_bucket = trail.get("S3BucketName")
         if s3_bucket:
             try:
@@ -103,13 +140,16 @@ def find_cloudtrail_encryption_disabled(cloudtrail_client, s3_client, findings):
                         )
                     )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_encryption, trails)
+
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_no_kms_encryption(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_no_kms_encryption(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_kms(trail):
         if not trail.get("KmsKeyId"):
             name = trail.get("Name") or trail.get("TrailARN")
             findings.append(
@@ -120,13 +160,16 @@ def find_cloudtrail_no_kms_encryption(cloudtrail_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_kms, trails)
+
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_not_recording(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_not_recording(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_recording(trail):
         name = trail.get("Name") or trail.get("TrailARN")
         try:
             status = cloudtrail_client.get_trail_status(Name=name)
@@ -139,15 +182,18 @@ def find_cloudtrail_not_recording(cloudtrail_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_recording, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_no_organization_trail(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_no_organization_trail(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_org_trail(trail):
         if not trail.get("IsOrganizationTrail", False):
             name = trail.get("Name") or trail.get("TrailARN")
             findings.append(
@@ -158,13 +204,18 @@ def find_cloudtrail_no_organization_trail(cloudtrail_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_org_trail, trails)
+
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_event_selectors_not_configured(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_event_selectors_not_configured(
+    cloudtrail_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_event_selectors(trail):
         try:
             trail_name = trail.get("Name") or trail.get("TrailARN")
             event_selectors = cloudtrail_client.get_event_selectors(
@@ -179,15 +230,20 @@ def find_cloudtrail_event_selectors_not_configured(cloudtrail_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_event_selectors, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_management_events_disabled(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_management_events_disabled(
+    cloudtrail_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_mgmt_events(trail):
         try:
             trail_name = trail.get("Name") or trail.get("TrailARN")
             event_selectors = cloudtrail_client.get_event_selectors(
@@ -204,15 +260,18 @@ def find_cloudtrail_management_events_disabled(cloudtrail_client, findings):
                     )
                     break
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_mgmt_events, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_data_events_disabled(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_data_events_disabled(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_data_events(trail):
         try:
             trail_name = trail.get("Name") or trail.get("TrailARN")
             event_selectors = cloudtrail_client.get_event_selectors(
@@ -232,15 +291,20 @@ def find_cloudtrail_data_events_disabled(cloudtrail_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_data_events, trails)
 
 
 @inject_clients(clients=["cloudtrail", "cloudwatch"])
-def find_cloudtrail_no_cloudwatch_logs(cloudtrail_client, cloudwatch_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_no_cloudwatch_logs(
+    cloudtrail_client, cloudwatch_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_cloudwatch(trail):
         if not trail.get("CloudWatchLogsLogGroupArn"):
             name = trail.get("Name") or trail.get("TrailARN")
             findings.append(
@@ -251,13 +315,18 @@ def find_cloudtrail_no_cloudwatch_logs(cloudtrail_client, cloudwatch_client, fin
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_cloudwatch, trails)
+
 
 @inject_clients(clients=["cloudtrail", "s3"])
-def find_cloudtrail_bucket_versioning_disabled(cloudtrail_client, s3_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_bucket_versioning_disabled(
+    cloudtrail_client, s3_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_versioning(trail):
         bucket_name = trail.get("S3BucketName")
         if bucket_name:
             try:
@@ -271,15 +340,20 @@ def find_cloudtrail_bucket_versioning_disabled(cloudtrail_client, s3_client, fin
                         )
                     )
             except ClientError:
-                continue
+                pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_versioning, trails)
 
 
 @inject_clients(clients=["cloudtrail", "s3"])
-def find_cloudtrail_bucket_no_mfa_delete(cloudtrail_client, s3_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_bucket_no_mfa_delete(
+    cloudtrail_client, s3_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_mfa_delete(trail):
         bucket_name = trail.get("S3BucketName")
         if bucket_name:
             try:
@@ -293,15 +367,20 @@ def find_cloudtrail_bucket_no_mfa_delete(cloudtrail_client, s3_client, findings)
                         )
                     )
             except ClientError:
-                continue
+                pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_mfa_delete, trails)
 
 
 @inject_clients(clients=["cloudtrail", "s3"])
-def find_cloudtrail_bucket_no_access_logging(cloudtrail_client, s3_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_bucket_no_access_logging(
+    cloudtrail_client, s3_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_access_logging(trail):
         bucket_name = trail.get("S3BucketName")
         if bucket_name:
             try:
@@ -315,32 +394,37 @@ def find_cloudtrail_bucket_no_access_logging(cloudtrail_client, s3_client, findi
                         )
                     )
             except ClientError:
-                continue
+                pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_access_logging, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
 def find_cloudtrail_shadow_trails(cloudtrail_client, findings):
-    trails_resp = cloudtrail_client.describe_trails(includeShadowTrails=True)
-    shadow_trails = [
-        t for t in trails_resp.get("trailList", []) if t.get("HasShadowTrails", False)
-    ]
-    for trail in shadow_trails:
-        name = trail.get("Name") or trail.get("TrailARN")
-        findings.append(
-            new_vulnerability(
-                CloudTrailVulnerability.cloudtrail_shadow_trails,
-                name,
-                "cloudtrail",
+    trails = fetch_trails(cloudtrail_client, include_shadow=True)
+
+    def check_shadow(trail):
+        if trail.get("HasShadowTrails", False):
+            name = trail.get("Name") or trail.get("TrailARN")
+            findings.append(
+                new_vulnerability(
+                    CloudTrailVulnerability.cloudtrail_shadow_trails,
+                    name,
+                    "cloudtrail",
+                )
             )
-        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_shadow, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_no_sns_notification(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_no_sns_notification(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_sns(trail):
         if not trail.get("SNSTopicName"):
             name = trail.get("Name") or trail.get("TrailARN")
             findings.append(
@@ -351,13 +435,18 @@ def find_cloudtrail_no_sns_notification(cloudtrail_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_sns, trails)
+
 
 @inject_clients(clients=["cloudtrail", "s3"])
-def find_cloudtrail_bucket_public_policy(cloudtrail_client, s3_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_bucket_public_policy(
+    cloudtrail_client, s3_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_public_policy(trail):
         bucket_name = trail.get("S3BucketName")
         if bucket_name:
             try:
@@ -378,15 +467,18 @@ def find_cloudtrail_bucket_public_policy(cloudtrail_client, s3_client, findings)
                             )
                             break
             except ClientError:
-                continue
+                pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_public_policy, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_enable_log_file_digest(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_enable_log_file_digest(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_digest(trail):
         if not trail.get("HasCustomEventSelectors", False) or not trail.get(
             "LogFileValidationEnabled", False
         ):
@@ -399,13 +491,16 @@ def find_cloudtrail_enable_log_file_digest(cloudtrail_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_digest, trails)
+
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_no_tags(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_no_tags(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_tags(trail):
         trail_arn = trail.get("TrailARN")
         if trail_arn:
             try:
@@ -420,15 +515,16 @@ def find_cloudtrail_no_tags(cloudtrail_client, findings):
                         )
                     )
             except ClientError:
-                continue
+                pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_tags, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
 def find_cloudtrail_too_many_trails(cloudtrail_client, findings):
     try:
-        trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-            "trailList", []
-        )
+        trails = fetch_trails(cloudtrail_client)
         trail_count = len(trails)
         if trail_count > 5:
             findings.append(
@@ -443,11 +539,11 @@ def find_cloudtrail_too_many_trails(cloudtrail_client, findings):
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_no_read_events(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_no_read_events(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_read_events(trail):
         try:
             trail_name = trail.get("Name") or trail.get("TrailARN")
             event_selectors = cloudtrail_client.get_event_selectors(
@@ -464,15 +560,20 @@ def find_cloudtrail_no_read_events(cloudtrail_client, findings):
                     )
                     break
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_read_events, trails)
 
 
 @inject_clients(clients=["cloudtrail", "s3"])
-def find_cloudtrail_bucket_no_lifecycle(cloudtrail_client, s3_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_bucket_no_lifecycle(
+    cloudtrail_client, s3_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_lifecycle(trail):
         bucket_name = trail.get("S3BucketName")
         if bucket_name:
             try:
@@ -487,13 +588,18 @@ def find_cloudtrail_bucket_no_lifecycle(cloudtrail_client, s3_client, findings):
                         )
                     )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_lifecycle, trails)
+
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_no_advanced_event_selectors(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_no_advanced_event_selectors(
+    cloudtrail_client, findings, trails=None
+):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_advanced_selectors(trail):
         try:
             trail_name = trail.get("Name") or trail.get("TrailARN")
             advanced = cloudtrail_client.get_event_selectors(TrailName=trail_name)
@@ -506,15 +612,18 @@ def find_cloudtrail_no_advanced_event_selectors(cloudtrail_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_advanced_selectors, trails)
 
 
 @inject_clients(clients=["cloudtrail"])
-def find_cloudtrail_name_invalid(cloudtrail_client, findings):
-    trails = cloudtrail_client.describe_trails(includeShadowTrails=False).get(
-        "trailList", []
-    )
-    for trail in trails:
+def find_cloudtrail_name_invalid(cloudtrail_client, findings, trails=None):
+    if trails is None:
+        trails = fetch_trails(cloudtrail_client)
+
+    def check_name(trail):
         name = trail.get("Name", "")
         if (
             not name
@@ -529,3 +638,6 @@ def find_cloudtrail_name_invalid(cloudtrail_client, findings):
                     "cloudtrail",
                 )
             )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_name, trails)

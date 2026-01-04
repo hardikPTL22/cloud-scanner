@@ -228,7 +228,6 @@ const Vulnerability = {
   // SSM
   ssm_parameter_unencrypted: "ssm_parameter_unencrypted",
   ssm_param_public_tier: "ssm_param_public_tier",
-  ssm_document_public: "ssm_document_public",
   ssm_no_session_logging: "ssm_no_session_logging",
   ssm_param_no_tags: "ssm_param_no_tags",
   ssm_patch_manager_disabled: "ssm_patch_manager_disabled",
@@ -471,7 +470,6 @@ export const RESOURCES_MAP: Record<string, string[]> = {
   ssm: [
     Vulnerability.ssm_parameter_unencrypted,
     Vulnerability.ssm_param_public_tier,
-    Vulnerability.ssm_document_public,
     Vulnerability.ssm_no_session_logging,
     Vulnerability.ssm_param_no_tags,
     Vulnerability.ssm_patch_manager_disabled,

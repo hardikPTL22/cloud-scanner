@@ -2,28 +2,60 @@ from botocore.exceptions import ClientError
 from scanner.mitre_maps.guardduty_mitre_map import GuardDutyVulnerability
 from scanner.utils import new_vulnerability
 from scanner.aws.decorator import inject_clients
+from concurrent.futures import ThreadPoolExecutor
+import logging
+import datetime
+
+logger = logging.getLogger(__name__)
+
+
+def fetch_detectors(guardduty_client):
+    """Fetch all GuardDuty detectors once for reuse across checks"""
+    try:
+        return guardduty_client.list_detectors().get("DetectorIds", [])
+    except Exception as e:
+        logger.error(f"Error fetching detectors: {e}")
+        return []
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_disabled(guardduty_client, findings):
-    disabled = []
-    detectors = guardduty_client.list_detectors()
-    if not detectors.get("DetectorIds"):
-        disabled.append("GuardDuty Detector Not Found")
-    else:
-        for detector_id in detectors.get("DetectorIds"):
+def find_guardduty_disabled(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    if not detectors:
+        findings.append(
+            new_vulnerability(
+                GuardDutyVulnerability.guardduty_disabled,
+                "GuardDuty Detector Not Found",
+                "guardduty",
+            )
+        )
+        return
+
+    def check_detector_status(detector_id):
+        try:
             status = guardduty_client.get_detector(DetectorId=detector_id)
             if not status.get("Status") == "ENABLED":
-                disabled.append(detector_id)
-    for d in disabled:
-        findings.append(
-            new_vulnerability(GuardDutyVulnerability.guardduty_disabled, d, "guardduty")
-        )
+                findings.append(
+                    new_vulnerability(
+                        GuardDutyVulnerability.guardduty_disabled,
+                        detector_id,
+                        "guardduty",
+                    )
+                )
+        except ClientError:
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_detector_status, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_detectors_disabled(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
+def find_guardduty_detectors_disabled(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
     if not detectors:
         findings.append(
             new_vulnerability(
@@ -32,23 +64,34 @@ def find_guardduty_detectors_disabled(guardduty_client, findings):
                 "guardduty",
             )
         )
-    else:
-        for det in detectors:
-            status = guardduty_client.get_detector(DetectorId=det).get("Status")
+        return
+
+    def check_detector_enabled(detector_id):
+        try:
+            status = guardduty_client.get_detector(DetectorId=detector_id).get("Status")
             if status != "ENABLED":
                 findings.append(
                     new_vulnerability(
                         GuardDutyVulnerability.guardduty_disabled,
-                        det,
+                        detector_id,
                         "guardduty",
                     )
                 )
+        except ClientError:
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_detector_enabled, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_finding_publishing_frequency_not_optimal(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_finding_publishing_frequency_not_optimal(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_frequency(detector_id):
         try:
             detector = guardduty_client.get_detector(DetectorId=detector_id)
             frequency = detector.get("FindingPublishingFrequency", "")
@@ -61,13 +104,18 @@ def find_guardduty_finding_publishing_frequency_not_optimal(guardduty_client, fi
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_frequency, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_s3_protection(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_s3_protection(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_s3_protection(detector_id):
         try:
             members = guardduty_client.list_members(
                 DetectorId=detector_id, OnlyAssociated=False
@@ -85,13 +133,18 @@ def find_guardduty_no_s3_protection(guardduty_client, findings):
                         )
                     )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_s3_protection, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_eks_protection(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_eks_protection(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_eks_protection(detector_id):
         try:
             detector_config = guardduty_client.get_detector(DetectorId=detector_id)
             data_sources = detector_config.get("DataSources", {})
@@ -105,13 +158,18 @@ def find_guardduty_no_eks_protection(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_eks_protection, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_lambda_protection(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_lambda_protection(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_lambda_protection(detector_id):
         try:
             detector_config = guardduty_client.get_detector(DetectorId=detector_id)
             data_sources = detector_config.get("DataSources", {})
@@ -125,13 +183,18 @@ def find_guardduty_no_lambda_protection(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_lambda_protection, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_rds_protection(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_rds_protection(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_rds_protection(detector_id):
         try:
             detector_config = guardduty_client.get_detector(DetectorId=detector_id)
             data_sources = detector_config.get("DataSources", {})
@@ -145,13 +208,20 @@ def find_guardduty_no_rds_protection(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_rds_protection, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_cloudwatch_logs_export(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_cloudwatch_logs_export(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_cloudwatch_export(detector_id):
         try:
             response = guardduty_client.describe_publishing_destination(
                 DetectorId=detector_id
@@ -173,11 +243,16 @@ def find_guardduty_no_cloudwatch_logs_export(guardduty_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_cloudwatch_export, detectors)
+
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_threat_intel_feed(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_threat_intel_feed(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_threat_intel(detector_id):
         try:
             threat_intel_sets = guardduty_client.list_threat_intel_sets(
                 DetectorId=detector_id
@@ -191,13 +266,18 @@ def find_guardduty_no_threat_intel_feed(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_threat_intel, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_findings_not_archived(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_findings_not_archived(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_archived(detector_id):
         try:
             list_findings_response = guardduty_client.list_findings(
                 DetectorId=detector_id,
@@ -213,13 +293,18 @@ def find_guardduty_findings_not_archived(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_archived, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_ip_set(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_ip_set(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_ip_set(detector_id):
         try:
             ip_sets = guardduty_client.list_ip_sets(DetectorId=detector_id)
             if not ip_sets.get("IpSetIds"):
@@ -231,13 +316,18 @@ def find_guardduty_no_ip_set(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_ip_set, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_member_accounts(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_member_accounts(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_members(detector_id):
         try:
             members = guardduty_client.list_members(
                 DetectorId=detector_id, OnlyAssociated=True
@@ -251,13 +341,20 @@ def find_guardduty_no_member_accounts(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_members, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_findings_high_severity_not_addressed(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_findings_high_severity_not_addressed(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_high_severity(detector_id):
         try:
             high_findings = guardduty_client.list_findings(
                 DetectorId=detector_id,
@@ -272,13 +369,18 @@ def find_guardduty_findings_high_severity_not_addressed(guardduty_client, findin
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_high_severity, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_detectors_no_tagging(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_detectors_no_tagging(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_tags(detector_id):
         try:
             tags = guardduty_client.list_tags_for_resource(
                 ResourceArn=f"arn:aws:guardduty:*:*:detector/{detector_id}"
@@ -292,13 +394,20 @@ def find_guardduty_detectors_no_tagging(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_tags, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_member_account_invitations(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_member_account_invitations(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_invitations(detector_id):
         try:
             invitations = guardduty_client.list_invitations()
             if not invitations.get("Invitations"):
@@ -310,7 +419,10 @@ def find_guardduty_no_member_account_invitations(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_invitations, detectors)
 
 
 @inject_clients(clients=["guardduty"])
@@ -336,9 +448,11 @@ def find_guardduty_master_account_not_enabled(guardduty_client, findings):
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_vpc_flow_logs(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_vpc_flow_logs(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_vpc_flow_logs(detector_id):
         try:
             detector_config = guardduty_client.get_detector(DetectorId=detector_id)
             data_sources = detector_config.get("DataSources", {})
@@ -352,13 +466,18 @@ def find_guardduty_no_vpc_flow_logs(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_vpc_flow_logs, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_cloudtrail_logs(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_cloudtrail_logs(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_cloudtrail(detector_id):
         try:
             detector_config = guardduty_client.get_detector(DetectorId=detector_id)
             data_sources = detector_config.get("DataSources", {})
@@ -372,13 +491,20 @@ def find_guardduty_no_cloudtrail_logs(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_cloudtrail, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_findings_export_not_configured(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_findings_export_not_configured(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_export(detector_id):
         try:
             publishing_dest = guardduty_client.describe_publishing_destination(
                 DetectorId=detector_id
@@ -400,11 +526,18 @@ def find_guardduty_findings_export_not_configured(guardduty_client, findings):
                 )
             )
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_export, detectors)
+
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_detector_no_sns_notification(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_detector_no_sns_notification(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_sns(detector_id):
         try:
             events = guardduty_client.list_publishing_destinations(
                 DetectorId=detector_id
@@ -426,16 +559,19 @@ def find_guardduty_detector_no_sns_notification(guardduty_client, findings):
         except ClientError:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_sns, detectors)
+
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_orphaned_detectors(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_orphaned_detectors(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_orphaned(detector_id):
         try:
             response = guardduty_client.get_detector(DetectorId=detector_id)
             if response.get("CreatedAt"):
-                import datetime
-
                 created_at = response.get("CreatedAt") / 1000
                 now = datetime.datetime.now().timestamp()
                 age_days = (now - created_at) / (24 * 3600)
@@ -449,13 +585,18 @@ def find_guardduty_orphaned_detectors(guardduty_client, findings):
                             )
                         )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_orphaned, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_custom_ip_set(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_custom_ip_set(guardduty_client, findings, detectors=None):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_custom_ip_set(detector_id):
         try:
             ip_sets = guardduty_client.list_ip_sets(DetectorId=detector_id)
             custom_ip_sets = [
@@ -470,13 +611,20 @@ def find_guardduty_no_custom_ip_set(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_custom_ip_set, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_no_custom_threat_intel_set(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_no_custom_threat_intel_set(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_custom_threat_intel(detector_id):
         try:
             threat_sets = guardduty_client.list_threat_intel_sets(
                 DetectorId=detector_id
@@ -490,13 +638,20 @@ def find_guardduty_no_custom_threat_intel_set(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_custom_threat_intel, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_malware_protection_disabled(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_malware_protection_disabled(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_malware_protection(detector_id):
         try:
             detector_config = guardduty_client.get_detector(DetectorId=detector_id)
             data_sources = detector_config.get("DataSources", {})
@@ -512,13 +667,20 @@ def find_guardduty_malware_protection_disabled(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_malware_protection, detectors)
 
 
 @inject_clients(clients=["guardduty"])
-def find_guardduty_runtime_monitoring_disabled(guardduty_client, findings):
-    detectors = guardduty_client.list_detectors().get("DetectorIds", [])
-    for detector_id in detectors:
+def find_guardduty_runtime_monitoring_disabled(
+    guardduty_client, findings, detectors=None
+):
+    if detectors is None:
+        detectors = fetch_detectors(guardduty_client)
+
+    def check_runtime_monitoring(detector_id):
         try:
             detector_config = guardduty_client.get_detector(DetectorId=detector_id)
             data_sources = detector_config.get("DataSources", {})
@@ -532,4 +694,7 @@ def find_guardduty_runtime_monitoring_disabled(guardduty_client, findings):
                     )
                 )
         except ClientError:
-            continue
+            pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_runtime_monitoring, detectors)

@@ -1,5 +1,8 @@
 from boto3.session import Session
 import logging
+from concurrent.futures import ThreadPoolExecutor
+import traceback
+from threading import Lock
 
 from scanner.aws.s3 import *
 from scanner.aws.ec2 import *
@@ -213,7 +216,6 @@ SCANS = {
     "ssm": {
         "ssm_parameter_unencrypted": find_ssm_params_unencrypted,
         "ssm_param_public_tier": find_ssm_parameters_with_public_tier,
-        "ssm_document_public": find_ssm_documents_public,
         "ssm_no_session_logging": find_ssm_no_session_logging,
         "ssm_param_no_tags": find_ssm_parameters_without_tags,
         "ssm_patch_manager_disabled": find_ssm_patch_manager_not_enabled,
@@ -285,9 +287,8 @@ SCANS = {
 }
 
 
-def run_scans(selected_services, access_key, secret_key, region):
+def run_scans(selected_services, access_key, secret_key, region, max_workers=16):
 
-    findings = []
     session = Session(
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
@@ -299,27 +300,53 @@ def run_scans(selected_services, access_key, secret_key, region):
         f"Starting {total_scans} security scans across {len(selected_services)} services"
     )
 
+    findings = []
+    findings_lock = Lock()
+
+    tasks = []
     for service, scan_list in selected_services.items():
         if service not in SCANS:
             logger.warning(f"Service '{service}' not found in SCANS mapping")
             continue
-
-        logger.info(f"Scanning {service} service with {len(scan_list)} checks")
 
         for scan_name in scan_list:
             if scan_name not in SCANS[service]:
                 logger.warning(f"Scan '{scan_name}' not found for service '{service}'")
                 continue
 
+            scan_func = SCANS[service][scan_name]
+            tasks.append(
+                (service, scan_name, scan_func, session, findings, findings_lock)
+            )
+
+    logger.info(
+        f"Launching {len(tasks)} scan tasks with {max_workers} parallel workers..."
+    )
+
+    def execute_scan(task):
+        service, scan_name, scan_func, session, findings, lock = task
+        local_findings = []
+        try:
+            scan_func(session, findings=local_findings)
+            with lock:
+                findings.extend(local_findings)
+            logger.debug(
+                f"✓ Completed scan: {service}/{scan_name} ({len(local_findings)} findings)"
+            )
+        except Exception as e:
+            logger.error(
+                f"✗ Error running scan {scan_name} for service {service}: {e}",
+                exc_info=True,
+            )
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(execute_scan, task) for task in tasks]
+
+        for future in futures:
             try:
-                scan_func = SCANS[service][scan_name]
-                scan_func(session, findings=findings)
-                logger.debug(f"✓ Completed scan: {service}/{scan_name}")
+                future.result()
             except Exception as e:
-                logger.error(
-                    f"✗ Error running scan {scan_name} for service {service}: {e}"
-                )
-                continue
+                logger.error(f"Task failed: {e}")
 
     logger.info(f"Scan complete. Total findings: {len(findings)}")
     return findings

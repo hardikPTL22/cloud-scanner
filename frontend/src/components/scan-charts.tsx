@@ -61,6 +61,7 @@ interface ScanChartsProps {
 export function ScanCharts({ findings }: ScanChartsProps) {
   const isFileFindings = findings.length > 0 && findings[0]?.status;
 
+  // ----- File Scan Results -----
   if (isFileFindings) {
     const maliciousCount = findings.filter(
       (f) => f.status === "Malicious"
@@ -77,21 +78,10 @@ export function ScanCharts({ findings }: ScanChartsProps) {
     ];
 
     const chartConfig = {
-      value: {
-        label: "Files",
-      },
-      malicious: {
-        label: "Malicious",
-        color: "#dc2626",
-      },
-      suspicious: {
-        label: "Suspicious",
-        color: "#f59e0b",
-      },
-      clean: {
-        label: "Clean",
-        color: "#10b981",
-      },
+      value: { label: "Files" },
+      malicious: { label: "Malicious", color: "#dc2626" },
+      suspicious: { label: "Suspicious", color: "#f59e0b" },
+      clean: { label: "Clean", color: "#10b981" },
     } satisfies ChartConfig;
 
     const id = "scan-pie-chart";
@@ -141,30 +131,28 @@ export function ScanCharts({ findings }: ScanChartsProps) {
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent align="end" className="rounded-xl dark:bg-slate-900">
-              {statuses.map((status) => {
-                return (
-                  <SelectItem
-                    key={status}
-                    value={status}
-                    className="rounded-lg [&_span]:flex"
-                  >
-                    <div className="flex items-center gap-2 text-xs">
-                      <span
-                        className="flex h-3 w-3 shrink-0 rounded-xs"
-                        style={{
-                          backgroundColor:
-                            status === "Malicious"
-                              ? "#dc2626"
-                              : status === "Suspicious"
-                              ? "#f59e0b"
-                              : "#10b981",
-                        }}
-                      />
-                      {status}
-                    </div>
-                  </SelectItem>
-                );
-              })}
+              {statuses.map((status) => (
+                <SelectItem
+                  key={status}
+                  value={status}
+                  className="rounded-lg [&_span]:flex"
+                >
+                  <div className="flex items-center gap-2 text-xs">
+                    <span
+                      className="flex h-3 w-3 shrink-0 rounded-xs"
+                      style={{
+                        backgroundColor:
+                          status === "Malicious"
+                            ? "#dc2626"
+                            : status === "Suspicious"
+                            ? "#f59e0b"
+                            : "#10b981",
+                      }}
+                    />
+                    {status}
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </CardHeader>
@@ -241,6 +229,9 @@ export function ScanCharts({ findings }: ScanChartsProps) {
     );
   }
 
+  // ---- VULNERABILITY CHARTS ----
+
+  // --- 1. Bar & Radar Data: Only show services with findings ---
   const chartData = useMemo(() => {
     const serviceData: Record<
       string,
@@ -271,37 +262,21 @@ export function ScanCharts({ findings }: ScanChartsProps) {
       }
     });
 
+    // Show only services with at least one finding
     return Object.values(serviceData).filter((data) => data.total > 0);
   }, [findings]);
 
-  const radarData = useMemo(() => {
-    return chartData.map((data) => ({
-      service: data.service,
-      vulnerabilities: data.total,
-    }));
-  }, [chartData]);
+  // --- 2. Radar chart data ---
+  const radarData = useMemo(
+    () =>
+      chartData.map((data) => ({
+        service: data.service,
+        vulnerabilities: data.total,
+      })),
+    [chartData]
+  );
 
-  const barChartConfig: ChartConfig = {
-    High: {
-      label: "High",
-      color: "#ef4444",
-    },
-    Medium: {
-      label: "Medium",
-      color: "#f59e0b",
-    },
-    Low: {
-      label: "Low",
-      color: "#22c55e",
-    },
-  };
-
-  const radarChartConfig: ChartConfig = {
-    vulnerabilities: {
-      label: "Vulnerabilities",
-      color: "#6366f1",
-    },
-  };
+  // --- 3. PIE CHART DATA ---
 
   const pieChartConfig: ChartConfig = {
     high: {
@@ -325,17 +300,18 @@ export function ScanCharts({ findings }: ScanChartsProps) {
       Low: 0,
     };
 
-    findings.reduce((acc, finding) => {
-      acc[finding.severity] = (acc[finding.severity] || 0) + 1;
-      return acc;
-    }, severityCounts);
+    findings.forEach((finding) => {
+      if (severityCounts[finding.severity] !== undefined) {
+        severityCounts[finding.severity]++;
+      }
+    });
 
     return Object.entries(severityCounts).map(([severity, count]) => ({
       severity,
       count,
       fill: pieChartConfig[severity.toLowerCase()]?.color || "",
     }));
-  }, []);
+  }, [findings]);
 
   if (chartData.length === 0) {
     return (
@@ -352,8 +328,20 @@ export function ScanCharts({ findings }: ScanChartsProps) {
     );
   }
 
+  // --- Bar/Radar Chart Config ---
+  const barChartConfig: ChartConfig = {
+    High: { label: "High", color: "#ef4444" },
+    Medium: { label: "Medium", color: "#f59e0b" },
+    Low: { label: "Low", color: "#22c55e" },
+  };
+
+  const radarChartConfig: ChartConfig = {
+    vulnerabilities: { label: "Vulnerabilities", color: "#6366f1" },
+  };
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
+      {/* Bar chart: Severity by Service */}
       <Card className="md:col-span-2 dark:border-slate-700 dark:bg-slate-950">
         <CardHeader>
           <CardTitle>Severity Distribution by Service</CardTitle>
@@ -399,7 +387,7 @@ export function ScanCharts({ findings }: ScanChartsProps) {
           </ChartContainer>
         </CardContent>
       </Card>
-
+      {/* Radar chart */}
       <Card className="dark:border-slate-700 dark:bg-slate-950">
         <CardHeader>
           <CardTitle>Vulnerability Distribution by Service</CardTitle>
@@ -434,7 +422,7 @@ export function ScanCharts({ findings }: ScanChartsProps) {
           </ChartContainer>
         </CardContent>
       </Card>
-
+      {/* Pie chart */}
       <Card className="dark:border-slate-700 dark:bg-slate-950">
         <CardHeader>
           <CardTitle>Severity Distribution</CardTitle>

@@ -3,20 +3,28 @@ import json
 from scanner.mitre_maps.s3_mitre_map import S3Vulnerability
 from scanner.utils import new_vulnerability
 from scanner.aws.decorator import inject_clients
+from concurrent.futures import ThreadPoolExecutor
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def fetch_buckets(s3_client):
+    """Fetch all S3 buckets once for reuse across checks"""
+    try:
+        return s3_client.list_buckets().get("Buckets", [])
+    except Exception as e:
+        logger.error(f"Error fetching buckets: {e}")
+        return []
 
 
 @inject_clients(clients=["s3"])
-def find_public_s3_buckets(s3_client, findings):
-    try:
-        bucket_list = s3_client.list_buckets()
-    except Exception:
-        return
+def find_public_s3_buckets(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
 
-    public_buckets = set()
-
-    for bucket in bucket_list.get("Buckets", []):
+    def check_public(bucket):
         bucket_name = bucket["Name"]
-
         try:
             acl = s3_client.get_bucket_acl(Bucket=bucket_name)
             for grant in acl.get("Grants", []):
@@ -25,8 +33,12 @@ def find_public_s3_buckets(s3_client, findings):
                     "http://acs.amazonaws.com/groups/global/AllUsers",
                     "http://acs.amazonaws.com/groups/global/AuthenticatedUsers",
                 ]:
-                    public_buckets.add(bucket_name)
-                    break
+                    findings.append(
+                        new_vulnerability(
+                            S3Vulnerability.public_s3_bucket, bucket_name, "s3"
+                        )
+                    )
+                    return
 
             policy = s3_client.get_bucket_policy(Bucket=bucket_name)
             policy_dict = json.loads(policy["Policy"])
@@ -44,22 +56,29 @@ def find_public_s3_buckets(s3_client, findings):
                     if "s3:GetObject" in actions or "s3:*" in actions:
                         for resource in resources:
                             if resource.endswith("/*") and bucket_name in resource:
-                                public_buckets.add(bucket_name)
-                                break
+                                findings.append(
+                                    new_vulnerability(
+                                        S3Vulnerability.public_s3_bucket,
+                                        bucket_name,
+                                        "s3",
+                                    )
+                                )
+                                return
         except ClientError:
             pass
         except Exception:
             pass
 
-    for b in public_buckets:
-        findings.append(new_vulnerability(S3Vulnerability.public_s3_bucket, b, "s3"))
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_public, buckets)
 
 
 @inject_clients(clients=["s3"])
-def find_unencrypted_s3_buckets(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    unencrypted = []
-    for bucket in bucket_list.get("Buckets", []):
+def find_unencrypted_s3_buckets(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_encryption(bucket):
         name = bucket["Name"]
         try:
             s3_client.get_bucket_encryption(Bucket=name)
@@ -70,57 +89,67 @@ def find_unencrypted_s3_buckets(s3_client, findings):
                 "NoSuchEncryptionConfiguration",
                 "404",
             ):
-                unencrypted.append(name)
+                findings.append(
+                    new_vulnerability(S3Vulnerability.unencrypted_s3_bucket, name, "s3")
+                )
         except Exception:
             pass
-    for b in unencrypted:
-        findings.append(
-            new_vulnerability(S3Vulnerability.unencrypted_s3_bucket, b, "s3")
-        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_encryption, buckets)
 
 
 @inject_clients(clients=["s3"])
-def find_bucket_versioning_disabled(s3_client, findings):
-    versioning_disabled = []
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_versioning_disabled(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_versioning(bucket):
         name = bucket["Name"]
         try:
             versioning = s3_client.get_bucket_versioning(Bucket=name)
             status = versioning.get("Status", "")
             if status != "Enabled":
-                versioning_disabled.append(name)
+                findings.append(
+                    new_vulnerability(
+                        S3Vulnerability.s3_bucket_versioning_disabled, name, "s3"
+                    )
+                )
         except Exception:
             pass
-    for b in versioning_disabled:
-        findings.append(
-            new_vulnerability(S3Vulnerability.s3_bucket_versioning_disabled, b, "s3")
-        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_versioning, buckets)
 
 
 @inject_clients(clients=["s3"])
-def find_bucket_logging_disabled(s3_client, findings):
-    logging_disabled = []
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_logging_disabled(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_logging(bucket):
         name = bucket["Name"]
         try:
             logging = s3_client.get_bucket_logging(Bucket=name)
             if not logging.get("LoggingEnabled"):
-                logging_disabled.append(name)
+                findings.append(
+                    new_vulnerability(
+                        S3Vulnerability.s3_bucket_logging_disabled, name, "s3"
+                    )
+                )
         except Exception:
             pass
-    for b in logging_disabled:
-        findings.append(
-            new_vulnerability(S3Vulnerability.s3_bucket_logging_disabled, b, "s3")
-        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_logging, buckets)
 
 
 @inject_clients(clients=["s3"])
-def find_bucket_block_public_access_disabled(s3_client, findings):
-    disabled = []
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_block_public_access_disabled(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_public_access_block(bucket):
         name = bucket["Name"]
         try:
             response = s3_client.get_public_access_block(Bucket=name)
@@ -133,25 +162,36 @@ def find_bucket_block_public_access_disabled(s3_client, findings):
                     config.get("RestrictPublicBuckets", False),
                 ]
             ):
-                disabled.append(name)
+                findings.append(
+                    new_vulnerability(
+                        S3Vulnerability.s3_bucket_block_public_access_disabled,
+                        name,
+                        "s3",
+                    )
+                )
         except ClientError as e:
             code = e.response.get("Error", {}).get("Code", "")
             if code == "NoSuchPublicAccessBlockConfiguration":
-                disabled.append(name)
+                findings.append(
+                    new_vulnerability(
+                        S3Vulnerability.s3_bucket_block_public_access_disabled,
+                        name,
+                        "s3",
+                    )
+                )
         except Exception:
             pass
-    for b in disabled:
-        findings.append(
-            new_vulnerability(
-                S3Vulnerability.s3_bucket_block_public_access_disabled, b, "s3"
-            )
-        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_public_access_block, buckets)
 
 
 @inject_clients(clients=["s3"])
-def find_bucket_mfa_delete_disabled(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_mfa_delete_disabled(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_mfa_delete(bucket):
         name = bucket["Name"]
         try:
             versioning = s3_client.get_bucket_versioning(Bucket=name)
@@ -164,11 +204,16 @@ def find_bucket_mfa_delete_disabled(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_mfa_delete, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_lifecycle_policy(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_lifecycle_policy(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_lifecycle(bucket):
         name = bucket["Name"]
         try:
             s3_client.get_bucket_lifecycle_configuration(Bucket=name)
@@ -183,11 +228,16 @@ def find_bucket_no_lifecycle_policy(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_lifecycle, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_cors_policy(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_cors_policy(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_cors(bucket):
         name = bucket["Name"]
         try:
             cors = s3_client.get_bucket_cors(Bucket=name)
@@ -200,17 +250,22 @@ def find_bucket_no_cors_policy(s3_client, findings):
                                 S3Vulnerability.s3_cors_all_origins, name, "s3"
                             )
                         )
-                        break
+                        return
         except ClientError:
             pass
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_cors, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_without_tags(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_without_tags(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_tags(bucket):
         name = bucket["Name"]
         try:
             tags = s3_client.get_bucket_tagging(Bucket=name)
@@ -226,11 +281,16 @@ def find_bucket_without_tags(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_tags, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_website_enabled(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_website_enabled(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_website(bucket):
         name = bucket["Name"]
         try:
             website = s3_client.get_bucket_website(Bucket=name)
@@ -243,11 +303,16 @@ def find_bucket_website_enabled(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_website, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_object_lock(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_object_lock(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_object_lock(bucket):
         name = bucket["Name"]
         try:
             lock = s3_client.get_object_lock_configuration(Bucket=name)
@@ -265,11 +330,16 @@ def find_bucket_no_object_lock(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_object_lock, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_requester_pays_enabled(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_requester_pays_enabled(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_requester_pays(bucket):
         name = bucket["Name"]
         try:
             request_payment = s3_client.get_bucket_request_payment(Bucket=name)
@@ -280,11 +350,16 @@ def find_bucket_requester_pays_enabled(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_requester_pays, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_acl_public(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_acl_public(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_acl_public(bucket):
         name = bucket["Name"]
         try:
             acl = s3_client.get_bucket_acl(Bucket=name)
@@ -297,15 +372,20 @@ def find_bucket_acl_public(s3_client, findings):
                     findings.append(
                         new_vulnerability(S3Vulnerability.s3_acl_public, name, "s3")
                     )
-                    break
+                    return
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_acl_public, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_policy_allows_unencrypted_upload(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_policy_allows_unencrypted_upload(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_unencrypted_upload(bucket):
         name = bucket["Name"]
         try:
             policy = s3_client.get_bucket_policy(Bucket=name)
@@ -323,17 +403,22 @@ def find_bucket_policy_allows_unencrypted_upload(s3_client, findings):
                                 "s3",
                             )
                         )
-                        break
+                        return
         except ClientError:
             pass
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_unencrypted_upload, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_replication(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_replication(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_replication(bucket):
         name = bucket["Name"]
         try:
             replication = s3_client.get_bucket_replication(Bucket=name)
@@ -352,11 +437,16 @@ def find_bucket_no_replication(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_replication, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_server_access_logging(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_server_access_logging(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_server_logging(bucket):
         name = bucket["Name"]
         try:
             logging = s3_client.get_bucket_logging(Bucket=name)
@@ -369,11 +459,16 @@ def find_bucket_no_server_access_logging(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_server_logging, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_cloudtrail_logging(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_cloudtrail_logging(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_cloudtrail_logging(bucket):
         name = bucket["Name"]
         try:
             notification = s3_client.get_bucket_notification_configuration(Bucket=name)
@@ -386,11 +481,16 @@ def find_bucket_no_cloudtrail_logging(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_cloudtrail_logging, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_intelligent_tiering(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_intelligent_tiering(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_intelligent_tiering(bucket):
         name = bucket["Name"]
         try:
             config = s3_client.get_bucket_intelligent_tiering_configuration(Bucket=name)
@@ -407,11 +507,16 @@ def find_bucket_no_intelligent_tiering(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_intelligent_tiering, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_object_lock_retention_default(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_object_lock_retention_default(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_retention(bucket):
         name = bucket["Name"]
         try:
             lock = s3_client.get_object_lock_configuration(Bucket=name)
@@ -427,11 +532,16 @@ def find_bucket_object_lock_retention_default(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_retention, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_public_read_access(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_public_read_access(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_public_read(bucket):
         name = bucket["Name"]
         try:
             acl = s3_client.get_bucket_acl(Bucket=name)
@@ -448,15 +558,20 @@ def find_bucket_public_read_access(s3_client, findings):
                                 S3Vulnerability.s3_public_read_access, name, "s3"
                             )
                         )
-                        break
+                        return
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_public_read, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_public_write_access(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_public_write_access(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_public_write(bucket):
         name = bucket["Name"]
         try:
             acl = s3_client.get_bucket_acl(Bucket=name)
@@ -473,15 +588,20 @@ def find_bucket_public_write_access(s3_client, findings):
                                 S3Vulnerability.s3_public_write_access, name, "s3"
                             )
                         )
-                        break
+                        return
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_public_write, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_default_encryption_not_aes256(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_default_encryption_not_aes256(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_encryption_algorithm(bucket):
         name = bucket["Name"]
         try:
             encryption = s3_client.get_bucket_encryption(Bucket=name)
@@ -502,11 +622,16 @@ def find_bucket_default_encryption_not_aes256(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_encryption_algorithm, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_bucket_key_enabled(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_bucket_key_enabled(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_bucket_key(bucket):
         name = bucket["Name"]
         try:
             encryption = s3_client.get_bucket_encryption(Bucket=name)
@@ -523,11 +648,16 @@ def find_bucket_no_bucket_key_enabled(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_bucket_key, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_user_versioning(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_user_versioning(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_user_versioning(bucket):
         name = bucket["Name"]
         try:
             versioning = s3_client.get_bucket_versioning(Bucket=name)
@@ -541,11 +671,16 @@ def find_bucket_no_user_versioning(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_user_versioning, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_unrestricted_policy(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_unrestricted_policy(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_unrestricted_policy(bucket):
         name = bucket["Name"]
         try:
             policy = s3_client.get_bucket_policy(Bucket=name)
@@ -558,17 +693,22 @@ def find_bucket_unrestricted_policy(s3_client, findings):
                             S3Vulnerability.s3_unrestricted_policy, name, "s3"
                         )
                     )
-                    break
+                    return
         except ClientError:
             pass
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_unrestricted_policy, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_kms_encryption(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_kms_encryption(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_kms_encryption(bucket):
         name = bucket["Name"]
         try:
             encryption = s3_client.get_bucket_encryption(Bucket=name)
@@ -592,11 +732,16 @@ def find_bucket_no_kms_encryption(s3_client, findings):
         except Exception:
             pass
 
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_kms_encryption, buckets)
+
 
 @inject_clients(clients=["s3"])
-def find_bucket_no_access_point(s3_client, findings):
-    bucket_list = s3_client.list_buckets()
-    for bucket in bucket_list.get("Buckets", []):
+def find_bucket_no_access_point(s3_client, findings, buckets=None):
+    if buckets is None:
+        buckets = fetch_buckets(s3_client)
+
+    def check_access_point(bucket):
         name = bucket["Name"]
         try:
             access_points = s3_client.list_access_points(Bucket=name)
@@ -608,3 +753,6 @@ def find_bucket_no_access_point(s3_client, findings):
             pass
         except Exception:
             pass
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        executor.map(check_access_point, buckets)
