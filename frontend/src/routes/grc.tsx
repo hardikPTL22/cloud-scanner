@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { client } from "@/lib/api-client";
 import { buildCompliance } from "@/lib/grc-utils";
-
+import type { GRCDashboardResponse } from "@/types/grc";
 import ComplianceOverview from "@/components/grc/ComplianceOverview";
 import FrameworkScoreCards from "@/components/grc/FrameworkScoreCards";
 import NonCompliantControls from "@/components/grc/NonCompliantControls";
 import ComplianceTrendChart from "@/components/grc/ComplianceTrendChart";
+import RiskHeatmap from "@/components/grc/RiskHeatmap";
 
 export const Route = createFileRoute("/grc")({
   component: GRCPage,
@@ -50,7 +51,7 @@ function GRCPage() {
 
           return {
             date: new Date(scan.created_at).toLocaleDateString(),
-            compliance: compliance.compliance_percentage,
+            compliance: compliance.overall_compliance,
           };
         })
       );
@@ -71,21 +72,54 @@ function GRCPage() {
     return <div>No scans found. Run a scan first.</div>;
   }
 
-  const compliance = buildCompliance(latestScanQuery.data ?? []);
+  const findings = latestScanQuery.data ?? [];
+  const complianceSummary = buildCompliance(findings);
+
+  const mockGRCData: GRCDashboardResponse = {
+    compliance_summary: complianceSummary,
+    control_effectiveness: null,
+    non_compliant_controls: [],
+    risk_distribution: {
+      critical: findings.filter((f) => f.severity?.toLowerCase() === "critical")
+        .length,
+      high: findings.filter((f) => f.severity?.toLowerCase() === "high").length,
+      medium: findings.filter((f) => f.severity?.toLowerCase() === "medium")
+        .length,
+      low: findings.filter((f) => f.severity?.toLowerCase() === "low").length,
+      informational: 0,
+    },
+    total_risk_score: findings.length * 5,
+    average_risk_score: 5.0,
+    findings_count: findings.length,
+    controls_failed: findings.filter(
+      (f) => f.severity?.toLowerCase() === "high"
+    ).length,
+  };
 
   return (
     <div className="space-y-6">
-      <ComplianceOverview summary={compliance} />
+      <h1 className="text-3xl font-bold">GRC Dashboard</h1>
 
-      <ComplianceTrendChart data={trendQuery.data ?? []} />
+      <ComplianceOverview data={mockGRCData} />
 
-      <FrameworkScoreCards frameworks={compliance.frameworks} />
-
-      <NonCompliantControls
-        controls={compliance.frameworks[0].controls.filter(
-          (c) => c.status === "non-compliant"
-        )}
+      <FrameworkScoreCards
+        compliance={complianceSummary}
+        effectiveness={null}
       />
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ComplianceTrendChart data={trendQuery.data ?? []} />
+        </div>
+        <div>
+          <RiskHeatmap data={mockGRCData} />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Non-Compliant Controls</h2>
+        <NonCompliantControls controls={mockGRCData.non_compliant_controls} />
+      </div>
     </div>
   );
 }

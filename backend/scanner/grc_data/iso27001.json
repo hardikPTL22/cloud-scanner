@@ -1,0 +1,106 @@
+{
+  "A.9.1.2": {
+    "id": "A.9.1.2",
+    "title": "Access to networks and network services",
+    "description": "Users should only be provided with access to the network and network services that they have been specifically authorized to use.",
+    "domain": "Access Control",
+    "objective": "A.9.1 Business requirements of access control",
+    "remediation": "Implement network access controls"
+  },
+  "A.9.2.1": {
+    "id": "A.9.2.1",
+    "title": "User registration and de-registration",
+    "description": "A formal user registration and de-registration process should be implemented to enable assignment of access rights.",
+    "domain": "Access Control",
+    "objective": "A.9.2 User access management",
+    "remediation": "Implement user lifecycle management"
+  },
+  "A.9.2.2": {
+    "id": "A.9.2.2",
+    "title": "User access provisioning",
+    "description": "A formal user access provisioning process should be implemented to assign or revoke access rights for all user types to all systems and services.",
+    "domain": "Access Control",
+    "objective": "A.9.2 User access management",
+    "remediation": "Implement access provisioning process"
+  },
+  "A.9.2.3": {
+    "id": "A.9.2.3",
+    "title": "Management of privileged access rights",
+    "description": "The allocation and use of privileged access rights should be restricted and controlled.",
+    "domain": "Access Control",
+    "objective": "A.9.2 User access management",
+    "remediation": "Implement least privilege access"
+  },
+  "A.9.4.2": {
+    "id": "A.9.4.2",
+    "title": "Secure log-on procedures",
+    "description": "Where required by the access control policy, access to systems and applications should be controlled by a secure log-on procedure.",
+    "domain": "Access Control",
+    "objective": "A.9.4 System and application access control",
+    "remediation": "Implement MFA and secure authentication"
+  },
+  "A.9.4.3": {
+    "id": "A.9.4.3",
+    "title": "Password management system",
+    "description": "Password management systems should be interactive and should ensure quality passwords.",
+    "domain": "Access Control",
+    "objective": "A.9.4 System and application access control",
+    "remediation": "Enforce strong password policies"
+  },
+  "A.10.1.1": {
+    "id": "A.10.1.1",
+    "title": "Policy on the use of cryptographic controls",
+    "description": "A policy on the use of cryptographic controls for protection of information should be developed and implemented.",
+    "domain": "Cryptography",
+    "objective": "A.10.1 Cryptographic controls",
+    "remediation": "Enable encryption at rest and in transit"
+  },
+  "A.10.1.2": {
+    "id": "A.10.1.2",
+    "title": "Key management",
+    "description": "A policy on the use, protection and lifetime of cryptographic keys should be developed and implemented through their whole lifecycle.",
+    "domain": "Cryptography",
+    "objective": "A.10.1 Cryptographic controls",
+    "remediation": "Implement key management with KMS"
+  },
+  "A.12.3.1": {
+    "id": "A.12.3.1",
+    "title": "Information backup",
+    "description": "Backup copies of information, software and system images should be taken and tested regularly.",
+    "domain": "Operations Security",
+    "objective": "A.12.3 Backup",
+    "remediation": "Enable automated backups"
+  },
+  "A.12.4.1": {
+    "id": "A.12.4.1",
+    "title": "Event logging",
+    "description": "Event logs recording user activities, exceptions, faults and information security events should be produced, kept and regularly reviewed.",
+    "domain": "Operations Security",
+    "objective": "A.12.4 Logging and monitoring",
+    "remediation": "Enable comprehensive logging"
+  },
+  "A.12.6.1": {
+    "id": "A.12.6.1",
+    "title": "Management of technical vulnerabilities",
+    "description": "Information about technical vulnerabilities of information systems being used should be obtained in a timely fashion.",
+    "domain": "Operations Security",
+    "objective": "A.12.6 Technical vulnerability management",
+    "remediation": "Enable threat detection services"
+  },
+  "A.13.1.1": {
+    "id": "A.13.1.1",
+    "title": "Network controls",
+    "description": "Networks should be managed and controlled to protect information in systems and applications.",
+    "domain": "Communications Security",
+    "objective": "A.13.1 Network security management",
+    "remediation": "Implement network segmentation and controls"
+  },
+  "A.13.1.3": {
+    "id": "A.13.1.3",
+    "title": "Segregation in networks",
+    "description": "Groups of information services, users and information systems should be segregated on networks.",
+    "domain": "Communications Security",
+    "objective": "A.13.1 Network security management",
+    "remediation": "Implement VPC and network isolation"
+  }
+}

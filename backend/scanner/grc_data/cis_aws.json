@@ -1,0 +1,66 @@
+{
+  "1.4": {
+    "id": "1.4",
+    "title": "Ensure no root account access key exists",
+    "description": "The root account is the most privileged user in an AWS account. AWS Access Keys provide programmatic access to a given AWS account.",
+    "level": 1,
+    "category": "Identity and Access Management",
+    "remediation": "Delete root access keys"
+  },
+  "1.5": {
+    "id": "1.5",
+    "title": "Ensure MFA is enabled for the root account",
+    "description": "The root account is the most privileged user in an AWS account. MFA adds an extra layer of protection on top of a user name and password.",
+    "level": 1,
+    "category": "Identity and Access Management",
+    "remediation": "Enable MFA for root account"
+  },
+  "2.1.1": {
+    "id": "2.1.1",
+    "title": "Ensure all S3 buckets employ encryption-at-rest",
+    "description": "Amazon S3 provides a variety of no, or low, cost encryption options to protect data at rest.",
+    "level": 1,
+    "category": "Storage",
+    "remediation": "Enable S3 bucket encryption"
+  },
+  "2.1.5": {
+    "id": "2.1.5",
+    "title": "Ensure that S3 Buckets are configured with 'Block public access'",
+    "description": "S3 Block Public Access provides controls to ensure that objects never have public access.",
+    "level": 1,
+    "category": "Storage",
+    "remediation": "Enable S3 Block Public Access"
+  },
+  "3.1": {
+    "id": "3.1",
+    "title": "Ensure CloudTrail is enabled in all regions",
+    "description": "AWS CloudTrail is a web service that records AWS API calls made in a given AWS account.",
+    "level": 1,
+    "category": "Logging",
+    "remediation": "Enable CloudTrail in all regions"
+  },
+  "4.1": {
+    "id": "4.1",
+    "title": "Ensure GuardDuty is enabled",
+    "description": "Amazon GuardDuty is a threat detection service that continuously monitors for malicious activity.",
+    "level": 1,
+    "category": "Monitoring",
+    "remediation": "Enable Amazon GuardDuty"
+  },
+  "5.1": {
+    "id": "5.1",
+    "title": "Ensure no security groups allow ingress from 0.0.0.0/0 to port 22",
+    "description": "Security groups provide stateful filtering of ingress/egress network traffic to AWS resources.",
+    "level": 1,
+    "category": "Networking",
+    "remediation": "Remove unrestricted SSH access"
+  },
+  "5.2": {
+    "id": "5.2",
+    "title": "Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389",
+    "description": "Security groups provide stateful filtering of ingress/egress network traffic to AWS resources.",
+    "level": 1,
+    "category": "Networking",
+    "remediation": "Remove unrestricted RDP access"
+  }
+}

@@ -5,34 +5,42 @@ from scanner.grc.schemas import ComplianceSummary, FrameworkScore
 
 
 def build_compliance(findings: list[dict]) -> ComplianceSummary:
+    """
+    Enhanced compliance calculation that properly handles:
+    1. Multiple findings mapping to same control
+    2. Different control counts per framework
+    3. Severity-based failure logic (High/Critical = fail)
+    """
     framework_controls = {
-        "iso27001": defaultdict(set),
-        "nist_csf": defaultdict(set),
-        "cis_aws": defaultdict(set),
-    }
-
-    failed_controls = {
-        "iso27001": set(),
-        "nist_csf": set(),
-        "cis_aws": set(),
+        "iso27001": defaultdict(lambda: {"findings": set(), "failed": False}),
+        "nist_csf": defaultdict(lambda: {"findings": set(), "failed": False}),
+        "cis_aws": defaultdict(lambda: {"findings": set(), "failed": False}),
     }
 
     for finding in findings:
-        mapping = map_control(finding.get("type"))
+        finding_type = finding.get("type")
+        severity = finding.get("severity", "").lower()
+
+        mapping = map_control(finding_type.upper() if finding_type else None)
         if not mapping:
             continue
 
+        is_failure = severity in ["high", "critical"]
+
         for fw in framework_controls.keys():
-            for ctrl in mapping.get(fw, []):
-                framework_controls[fw][ctrl].add(finding["type"])
-                failed_controls[fw].add(ctrl)
+            controls = mapping.get(fw, [])
+            for ctrl in controls:
+                framework_controls[fw][ctrl]["findings"].add(finding_type)
+
+                if is_failure:
+                    framework_controls[fw][ctrl]["failed"] = True
 
     summary = {}
     control_status = {"compliant": 0, "non_compliant": 0}
 
     for fw, controls in framework_controls.items():
         total = len(controls)
-        failed = len(failed_controls[fw])
+        failed = sum(1 for ctrl_data in controls.values() if ctrl_data["failed"])
         passed = total - failed
 
         control_status["compliant"] += passed

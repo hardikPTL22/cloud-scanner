@@ -1,12 +1,2712 @@
 {
   "S3_PUBLIC_BUCKET": {
-    "iso27001": ["A.8.12"],
-    "nist_csf": ["PR.AC-3"],
-    "cis_aws": ["2.1"]
+    "iso27001": [
+      "A.9.1.2",
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-3",
+      "PR.DS-5"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
   },
-  "S3_UNENCRYPTED_BUCKET": {
-    "iso27001": ["A.8.24"],
-    "nist_csf": ["PR.DS-1"],
-    "cis_aws": ["2.2"]
+  "S3_VERSIONING_DISABLED": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.1.3"
+    ]
+  },
+  "S3_LOGGING_DISABLED": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.3"
+    ]
+  },
+  "S3_BLOCK_PUBLIC_ACCESS_DISABLED": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1",
+      "A.10.1.2"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_MFA_DELETE_DISABLED": {
+    "iso27001": [
+      "A.9.4.3"
+    ],
+    "nist_csf": [
+      "PR.AC-7"
+    ],
+    "cis_aws": [
+      "2.1.3"
+    ]
+  },
+  "S3_NO_LIFECYCLE": {
+    "iso27001": [
+      "A.8.3.3"
+    ],
+    "nist_csf": [
+      "PR.IP-2"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_CORS_ALL_ORIGINS": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_BUCKET_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_WEBSITE_ENABLED": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_NO_OBJECT_LOCK": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.DS-6"
+    ],
+    "cis_aws": [
+      "2.1.3"
+    ]
+  },
+  "S3_REQUESTER_PAYS": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_ACL_PUBLIC": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_UNENCRYPTED_UPLOAD_ALLOWED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_NO_REPLICATION": {
+    "iso27001": [
+      "A.17.2.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.1.3"
+    ]
+  },
+  "S3_NO_SERVER_ACCESS_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.3"
+    ]
+  },
+  "S3_NO_CLOUDTRAIL_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "S3_NO_INTELLIGENT_TIERING": {
+    "iso27001": [
+      "A.8.3.3"
+    ],
+    "nist_csf": [
+      "PR.IP-2"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_OBJECT_LOCK_NO_RETENTION": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.DS-6"
+    ],
+    "cis_aws": [
+      "2.1.3"
+    ]
+  },
+  "S3_PUBLIC_READ_ACCESS": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_PUBLIC_WRITE_ACCESS": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_NON_STANDARD_ENCRYPTION": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_BUCKET_KEY_DISABLED": {
+    "iso27001": [
+      "A.10.1.2"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_USER_VERSIONING_DISABLED": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.1.3"
+    ]
+  },
+  "S3_UNRESTRICTED_POLICY": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "S3_NO_KMS_ENCRYPTION": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "S3_NO_ACCESS_POINT": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "IAM_OVERPERMISSIVE": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_USER_NO_MFA": {
+    "iso27001": [
+      "A.9.4.2"
+    ],
+    "nist_csf": [
+      "PR.AC-7"
+    ],
+    "cis_aws": [
+      "1.10"
+    ]
+  },
+  "IAM_UNUSED_ACCESS_KEY": {
+    "iso27001": [
+      "A.9.2.4"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.12"
+    ]
+  },
+  "IAM_INLINE_POLICY": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_ROOT_ACCESS_KEY": {
+    "iso27001": [
+      "A.9.2.1"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.4"
+    ]
+  },
+  "IAM_USER_WITH_CONSOLE_ACCESS": {
+    "iso27001": [
+      "A.9.2.2"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.11"
+    ]
+  },
+  "IAM_POLICY_WILDCARD": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_ROOT_MFA_DISABLED": {
+    "iso27001": [
+      "A.9.2.1"
+    ],
+    "nist_csf": [
+      "PR.AC-7"
+    ],
+    "cis_aws": [
+      "1.5"
+    ]
+  },
+  "IAM_OLD_ACCESS_KEY": {
+    "iso27001": [
+      "A.9.2.4"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.14"
+    ]
+  },
+  "IAM_NO_PASSWORD_POLICY": {
+    "iso27001": [
+      "A.9.4.3"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.8"
+    ]
+  },
+  "IAM_WEAK_PASSWORD_POLICY": {
+    "iso27001": [
+      "A.9.4.3"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.8"
+    ]
+  },
+  "IAM_USER_DIRECT_POLICY": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_ROLE_DIRECT_POLICY": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_EMPTY_GROUP": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_USER_NO_ACCESS_KEY": {
+    "iso27001": [
+      "A.9.2.2"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.12"
+    ]
+  },
+  "IAM_NO_SAML_PROVIDER": {
+    "iso27001": [
+      "A.9.2.2"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.11"
+    ]
+  },
+  "IAM_ROLE_TRUSTS_ALL": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_ROLE_ADMIN_ACCESS": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_MULTIPLE_ACCESS_KEYS": {
+    "iso27001": [
+      "A.9.2.4"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.13"
+    ]
+  },
+  "IAM_NO_CREDENTIAL_REPORT": {
+    "iso27001": [
+      "A.9.2.4"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.12"
+    ]
+  },
+  "IAM_NO_SSH_KEY": {
+    "iso27001": [
+      "A.9.2.2"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.11"
+    ]
+  },
+  "IAM_USER_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_ROLE_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_POLICY_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "IAM_UNUSED_POLICY": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "EC2_OPEN_SECURITY_GROUP_INGRESS": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.2"
+    ]
+  },
+  "EC2_OPEN_SECURITY_GROUP_EGRESS": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.2"
+    ]
+  },
+  "EC2_UNUSED_SECURITY_GROUP": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "EC2_INSTANCE_PUBLIC_IP": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.4"
+    ]
+  },
+  "EC2_VPC_FLOW_LOGS_DISABLED": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.9"
+    ]
+  },
+  "EC2_SG_SSH_OPEN": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.2"
+    ]
+  },
+  "EC2_SG_RDP_OPEN": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.2"
+    ]
+  },
+  "EC2_DEFAULT_VPC_IN_USE": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "EC2_DEFAULT_SG_IN_USE": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.3"
+    ]
+  },
+  "EC2_DETAILED_MONITORING_DISABLED": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "EC2_EBS_OPTIMIZATION_DISABLED": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "EC2_TERMINATION_PROTECTION_DISABLED": {
+    "iso27001": [
+      "A.12.1.2"
+    ],
+    "nist_csf": [
+      "PR.IP-3"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "EC2_UNATTACHED_EIP": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "5.4"
+    ]
+  },
+  "EC2_INSTANCE_PUBLIC_ENI": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.4"
+    ]
+  },
+  "EC2_NO_SNAPSHOTS": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EC2_UNENCRYPTED_SNAPSHOT": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EC2_PUBLIC_SNAPSHOT": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EC2_PUBLIC_AMI": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "5.4"
+    ]
+  },
+  "EC2_NACL_ALLOW_ALL": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "EC2_ROUTE_TABLE_OPEN": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "EC2_NAT_GATEWAY_NO_EIP": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.4"
+    ]
+  },
+  "EC2_VPN_NOT_ENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-2"
+    ],
+    "cis_aws": [
+      "5.6"
+    ]
+  },
+  "EC2_VPN_NOT_AUTHENTICATED": {
+    "iso27001": [
+      "A.9.2.2"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "5.6"
+    ]
+  },
+  "EC2_EBS_DELETE_ON_TERMINATION_DISABLED": {
+    "iso27001": [
+      "A.11.2.7"
+    ],
+    "nist_csf": [
+      "PR.IP-6"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EC2_INSTANCE_NO_IAM_PROFILE": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "5.4"
+    ]
+  },
+  "EC2_SOURCE_DEST_CHECK_ENABLED": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "EC2_KEY_PAIR_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "EC2_SG_NO_DESCRIPTION": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "EC2_INSTANCE_DEFAULT_TENANCY": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.PT-2"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "EC2_INSTANCE_SHUTDOWN_BEHAVIOR": {
+    "iso27001": [
+      "A.12.1.2"
+    ],
+    "nist_csf": [
+      "PR.IP-3"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "CLOUDTRAIL_NOT_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3",
+      "PR.PT-1"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_NOT_MULTI_REGION": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_NO_LOG_FILE_VALIDATION": {
+    "iso27001": [
+      "A.12.4.2"
+    ],
+    "nist_csf": [
+      "PR.DS-6"
+    ],
+    "cis_aws": [
+      "3.2"
+    ]
+  },
+  "CLOUDTRAIL_BUCKET_PUBLIC": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "3.3"
+    ]
+  },
+  "CLOUDTRAIL_BUCKET_ENCRYPTION_DISABLED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "3.7"
+    ]
+  },
+  "CLOUDTRAIL_NO_KMS": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "3.7"
+    ]
+  },
+  "CLOUDTRAIL_NOT_RECORDING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_NO_ORG_TRAIL": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_NO_EVENT_SELECTORS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_MGMT_EVENTS_DISABLED": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_NO_DATA_EVENTS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.5"
+    ]
+  },
+  "CLOUDTRAIL_NO_CLOUDWATCH": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.4"
+    ]
+  },
+  "CLOUDTRAIL_BUCKET_VERSIONING_DISABLED": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "3.6"
+    ]
+  },
+  "CLOUDTRAIL_BUCKET_NO_MFA_DELETE": {
+    "iso27001": [
+      "A.9.4.3"
+    ],
+    "nist_csf": [
+      "PR.AC-7"
+    ],
+    "cis_aws": [
+      "3.6"
+    ]
+  },
+  "CLOUDTRAIL_BUCKET_NO_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.3"
+    ]
+  },
+  "CLOUDTRAIL_SHADOW_TRAILS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_NO_SNS": {
+    "iso27001": [
+      "A.16.1.2"
+    ],
+    "nist_csf": [
+      "DE.AE-5"
+    ],
+    "cis_aws": [
+      "3.8"
+    ]
+  },
+  "CLOUDTRAIL_BUCKET_PUBLIC_POLICY": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "3.3"
+    ]
+  },
+  "CLOUDTRAIL_NO_LOG_DIGEST": {
+    "iso27001": [
+      "A.12.4.2"
+    ],
+    "nist_csf": [
+      "PR.DS-6"
+    ],
+    "cis_aws": [
+      "3.2"
+    ]
+  },
+  "CLOUDTRAIL_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_TOO_MANY_TRAILS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_NO_READ_EVENTS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_BUCKET_NO_LIFECYCLE": {
+    "iso27001": [
+      "A.8.3.3"
+    ],
+    "nist_csf": [
+      "PR.IP-2"
+    ],
+    "cis_aws": [
+      "3.6"
+    ]
+  },
+  "CLOUDTRAIL_NO_ADVANCED_SELECTORS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "CLOUDTRAIL_INVALID_NAME": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "GUARDDUTY_DISABLED": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_FINDING_FREQ_NOT_OPTIMAL": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_S3_PROTECTION": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_EKS_PROTECTION": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_LAMBDA_PROTECTION": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_RDS_PROTECTION": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_CLOUDWATCH_LOGS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_THREAT_INTEL": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-4"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_FINDINGS_NOT_ARCHIVED": {
+    "iso27001": [
+      "A.12.4.2"
+    ],
+    "nist_csf": [
+      "DE.AE-4"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_IP_SET": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-4"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_MEMBER_ACCOUNTS": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_HIGH_SEVERITY_FINDINGS": {
+    "iso27001": [
+      "A.16.1.1"
+    ],
+    "nist_csf": [
+      "RS.AN-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_DETECTOR_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_MEMBER_INVITATIONS": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_MASTER_ACCOUNT": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_VPC_FLOW_LOGS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.9"
+    ]
+  },
+  "GUARDDUTY_NO_CLOUDTRAIL": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "GUARDDUTY_NO_FINDINGS_EXPORT": {
+    "iso27001": [
+      "A.12.4.2"
+    ],
+    "nist_csf": [
+      "DE.AE-4"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_SNS_NOTIFICATION": {
+    "iso27001": [
+      "A.16.1.2"
+    ],
+    "nist_csf": [
+      "DE.AE-5"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_ORPHANED_DETECTOR": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_CUSTOM_IP_SET": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-4"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_NO_CUSTOM_THREAT_INTEL": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-4"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_MALWARE_PROTECTION_DISABLED": {
+    "iso27001": [
+      "A.12.2.1"
+    ],
+    "nist_csf": [
+      "DE.CM-4"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "GUARDDUTY_RUNTIME_MONITORING_DISABLED": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.CM-1"
+    ],
+    "cis_aws": [
+      "4.1"
+    ]
+  },
+  "LAMBDA_OVERPERMISSIVE_ROLE": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "LAMBDA_PUBLIC_ACCESS": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "LAMBDA_NO_VPC": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "LAMBDA_NO_DLQ": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_XRAY_DISABLED": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "LAMBDA_HIGH_TIMEOUT": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_HIGH_MEMORY": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_NO_ENCRYPTION": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "LAMBDA_NO_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "LAMBDA_OUTDATED_RUNTIME": {
+    "iso27001": [
+      "A.12.6.2"
+    ],
+    "nist_csf": [
+      "ID.RA-1"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_NO_RESERVED_CONCURRENCY": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_NO_CODE_SIGNING": {
+    "iso27001": [
+      "A.14.2.5"
+    ],
+    "nist_csf": [
+      "PR.DS-6"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_ENV_NOT_ENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "LAMBDA_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "LAMBDA_NO_DESCRIPTION": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "LAMBDA_UNRESTRICTED_VPC": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.1"
+    ]
+  },
+  "LAMBDA_EPHEMERAL_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.1.1"
+    ]
+  },
+  "LAMBDA_LAYER_NOT_VETTED": {
+    "iso27001": [
+      "A.14.2.1"
+    ],
+    "nist_csf": [
+      "PR.IP-1"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_FUNCTION_URL_ENABLED": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "LAMBDA_FUNCTION_URL_NO_AUTH": {
+    "iso27001": [
+      "A.9.2.1"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.11"
+    ]
+  },
+  "LAMBDA_FUNCTION_URL_CORS_ALL": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "2.1.5"
+    ]
+  },
+  "LAMBDA_IMAGE_SCAN_DISABLED": {
+    "iso27001": [
+      "A.12.6.1"
+    ],
+    "nist_csf": [
+      "DE.CM-8"
+    ],
+    "cis_aws": [
+      "5.5"
+    ]
+  },
+  "LAMBDA_ROLE_TRUSTS_ALL": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "LAMBDA_NO_RESOURCE_POLICY": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "RDS_INSTANCE_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.3.1"
+    ]
+  },
+  "RDS_INSTANCE_PUBLIC_ACCESS": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.3.2"
+    ]
+  },
+  "RDS_NO_BACKUP": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.3.3"
+    ]
+  },
+  "RDS_LOW_BACKUP_RETENTION": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.3.3"
+    ]
+  },
+  "RDS_NO_MULTI_AZ": {
+    "iso27001": [
+      "A.17.2.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.3.4"
+    ]
+  },
+  "RDS_NO_ENHANCED_MONITORING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "2.3.5"
+    ]
+  },
+  "RDS_NO_DELETION_PROTECTION": {
+    "iso27001": [
+      "A.12.1.2"
+    ],
+    "nist_csf": [
+      "PR.IP-3"
+    ],
+    "cis_aws": [
+      "2.3.6"
+    ]
+  },
+  "RDS_NO_COPY_SNAPSHOTS": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.3.3"
+    ]
+  },
+  "RDS_AUTO_MINOR_UPGRADE": {
+    "iso27001": [
+      "A.12.6.2"
+    ],
+    "nist_csf": [
+      "PR.IP-1"
+    ],
+    "cis_aws": [
+      "2.3.5"
+    ]
+  },
+  "RDS_NO_PERFORMANCE_INSIGHTS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "2.3.5"
+    ]
+  },
+  "RDS_IAM_AUTH_DISABLED": {
+    "iso27001": [
+      "A.9.2.2"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "2.3.5"
+    ]
+  },
+  "RDS_DEFAULT_PORT": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "2.3.2"
+    ]
+  },
+  "RDS_DEFAULT_PARAM_GROUP": {
+    "iso27001": [
+      "A.12.1.4"
+    ],
+    "nist_csf": [
+      "PR.IP-1"
+    ],
+    "cis_aws": [
+      "2.3.5"
+    ]
+  },
+  "RDS_CLUSTER_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.3.1"
+    ]
+  },
+  "RDS_CLUSTER_PUBLIC": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.3.2"
+    ]
+  },
+  "RDS_NO_AUTOMATED_BACKUP": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.3.3"
+    ]
+  },
+  "RDS_SNAPSHOT_PUBLIC": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.3.1"
+    ]
+  },
+  "RDS_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.3.1"
+    ]
+  },
+  "RDS_STORAGE_NOT_ENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.3.1"
+    ]
+  },
+  "RDS_NO_OPTION_GROUP": {
+    "iso27001": [
+      "A.12.1.4"
+    ],
+    "nist_csf": [
+      "PR.IP-1"
+    ],
+    "cis_aws": [
+      "2.3.5"
+    ]
+  },
+  "RDS_NO_VPC": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "2.3.2"
+    ]
+  },
+  "RDS_NO_CLOUDTRAIL": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "RDS_CLUSTER_LOW_RETENTION": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.3.3"
+    ]
+  },
+  "RDS_DEFAULT_SG": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "5.3"
+    ]
+  },
+  "RDS_NO_KMS_KEY": {
+    "iso27001": [
+      "A.10.1.2"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.3.1"
+    ]
+  },
+  "RDS_UNSUPPORTED_ENGINE": {
+    "iso27001": [
+      "A.12.6.2"
+    ],
+    "nist_csf": [
+      "ID.RA-1"
+    ],
+    "cis_aws": [
+      "2.3.5"
+    ]
+  },
+  "RDS_NO_AUDIT_LOGS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "EBS_VOLUME_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_NO_SNAPSHOTS": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_SNAPSHOT_PUBLIC": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_SNAPSHOT_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_DEFAULT_KMS_KEY": {
+    "iso27001": [
+      "A.10.1.2"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_SNAPSHOT_SHARED": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_NO_DELETE_ON_TERMINATION": {
+    "iso27001": [
+      "A.11.2.7"
+    ],
+    "nist_csf": [
+      "PR.IP-6"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_UNATTACHED": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_OLD_SNAPSHOTS": {
+    "iso27001": [
+      "A.8.3.3"
+    ],
+    "nist_csf": [
+      "PR.IP-2"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_SNAPSHOT_NO_DESCRIPTION": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_NO_DESCRIPTION": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_IO_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_GP2_LARGE": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_SNAPSHOT_COPY_ENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_IOPS_NOT_OPTIMIZED": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_SNAPSHOTS_TOO_MANY": {
+    "iso27001": [
+      "A.8.3.3"
+    ],
+    "nist_csf": [
+      "PR.IP-2"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_VOLUME_EXCESSIVE": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_COPY_NO_ENCRYPTION": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_NO_BACKUP_PLAN": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_SNAPSHOT_COPY_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_NO_FAST_RESTORE": {
+    "iso27001": [
+      "A.17.2.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "EBS_OLD_VOLUME_TYPE": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.2.1"
+    ]
+  },
+  "SSM_PARAMETER_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_PARAM_PUBLIC_TIER": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_NO_SESSION_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "SSM_PARAM_NO_TAGS": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_PATCH_MANAGER_DISABLED": {
+    "iso27001": [
+      "A.12.6.2"
+    ],
+    "nist_csf": [
+      "PR.IP-1"
+    ],
+    "cis_aws": [
+      "2.4.2"
+    ]
+  },
+  "SSM_MAINTENANCE_WINDOW_NO_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "SSM_NO_HOST_MGMT_ROLE": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "SSM_NO_OPS_CENTER": {
+    "iso27001": [
+      "A.16.1.5"
+    ],
+    "nist_csf": [
+      "RS.MI-3"
+    ],
+    "cis_aws": [
+      "2.4.2"
+    ]
+  },
+  "SSM_AUTOMATION_NO_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "SSM_COMMAND_NO_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "SSM_DOC_NO_VERSIONING": {
+    "iso27001": [
+      "A.12.3.1"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_PARAM_PERMISSIVE": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_PARAM_STALE": {
+    "iso27001": [
+      "A.8.3.3"
+    ],
+    "nist_csf": [
+      "PR.IP-2"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_NO_INVENTORY": {
+    "iso27001": [
+      "A.8.1.1"
+    ],
+    "nist_csf": [
+      "ID.AM-1"
+    ],
+    "cis_aws": [
+      "2.4.2"
+    ]
+  },
+  "SSM_COMPLIANCE_DISABLED": {
+    "iso27001": [
+      "A.18.2.2"
+    ],
+    "nist_csf": [
+      "PR.IP-1"
+    ],
+    "cis_aws": [
+      "2.4.2"
+    ]
+  },
+  "SSM_STATE_MANAGER_DISABLED": {
+    "iso27001": [
+      "A.12.1.4"
+    ],
+    "nist_csf": [
+      "PR.IP-1"
+    ],
+    "cis_aws": [
+      "2.4.2"
+    ]
+  },
+  "SSM_PARAM_LIMIT_HIGH": {
+    "iso27001": [
+      "A.8.3.3"
+    ],
+    "nist_csf": [
+      "PR.IP-2"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_DEFAULT_KMS_KEY": {
+    "iso27001": [
+      "A.10.1.2"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_DOC_HARDCODED_CREDS": {
+    "iso27001": [
+      "A.9.4.1"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "1.12"
+    ]
+  },
+  "SSM_PARAM_NO_POLICY": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "2.4.1"
+    ]
+  },
+  "SSM_AUTOMATION_NO_ROLE": {
+    "iso27001": [
+      "A.9.2.3"
+    ],
+    "nist_csf": [
+      "PR.AC-4"
+    ],
+    "cis_aws": [
+      "1.16"
+    ]
+  },
+  "SSM_NO_CHANGE_CALENDAR": {
+    "iso27001": [
+      "A.12.1.2"
+    ],
+    "nist_csf": [
+      "PR.IP-3"
+    ],
+    "cis_aws": [
+      "2.4.2"
+    ]
+  },
+  "APIGATEWAY_OPEN_RESOURCE": {
+    "iso27001": [
+      "A.9.1.2"
+    ],
+    "nist_csf": [
+      "PR.AC-3"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_LOGGING": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "APIGATEWAY_NO_WAF": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "4.2"
+    ]
+  },
+  "APIGATEWAY_NO_THROTTLING": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_CACHE": {
+    "iso27001": [
+      "A.12.1.3"
+    ],
+    "nist_csf": [
+      "PR.IP-4"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_XRAY": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "APIGATEWAY_NO_SSL": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-2"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_API_ENDPOINT": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_METHOD_NO_AUTH": {
+    "iso27001": [
+      "A.9.2.1"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_ACCESS_LOGS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "APIGATEWAY_NO_AUTH": {
+    "iso27001": [
+      "A.9.2.1"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_REQUEST_VALIDATION": {
+    "iso27001": [
+      "A.14.2.1"
+    ],
+    "nist_csf": [
+      "PR.DS-5"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_DOMAIN_CERT": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-2"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_CERTIFICATE_EXPIRED": {
+    "iso27001": [
+      "A.13.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-2"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_EXECUTION_LOGS": {
+    "iso27001": [
+      "A.12.4.1"
+    ],
+    "nist_csf": [
+      "DE.AE-3"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
+  },
+  "APIGATEWAY_CORS_ALL_ORIGINS": {
+    "iso27001": [
+      "A.13.1.3"
+    ],
+    "nist_csf": [
+      "PR.AC-5"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_BINARY_MEDIA_UNENCRYPTED": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_NO_API_KEY": {
+    "iso27001": [
+      "A.9.2.1"
+    ],
+    "nist_csf": [
+      "PR.AC-1"
+    ],
+    "cis_aws": [
+      "2.5.1"
+    ]
+  },
+  "APIGATEWAY_PLAINTEXT_LOGS": {
+    "iso27001": [
+      "A.10.1.1"
+    ],
+    "nist_csf": [
+      "PR.DS-1"
+    ],
+    "cis_aws": [
+      "3.1"
+    ]
   }
 }

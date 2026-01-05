@@ -1,0 +1,138 @@
+{
+  "ID.AM-1": {
+    "id": "ID.AM-1",
+    "function": "Identify",
+    "category": "Asset Management",
+    "subcategory": "Physical devices and systems within the organization are inventoried",
+    "description": "Maintain an inventory of all physical and virtual assets",
+    "references": ["CIS CSC 1", "ISO 27001 A.8.1.1"]
+  },
+  "PR.AC-1": {
+    "id": "PR.AC-1",
+    "function": "Protect",
+    "category": "Identity Management, Authentication and Access Control",
+    "subcategory": "Identities and credentials are issued, managed, verified, revoked, and audited",
+    "description": "Manage user identities and credentials throughout their lifecycle",
+    "references": ["CIS CSC 16", "ISO 27001 A.9.2.1"]
+  },
+  "PR.AC-3": {
+    "id": "PR.AC-3",
+    "function": "Protect",
+    "category": "Identity Management, Authentication and Access Control",
+    "subcategory": "Remote access is managed",
+    "description": "Control and monitor remote access to resources",
+    "references": ["CIS CSC 12", "ISO 27001 A.9.1.2"]
+  },
+  "PR.AC-4": {
+    "id": "PR.AC-4",
+    "function": "Protect",
+    "category": "Identity Management, Authentication and Access Control",
+    "subcategory": "Access permissions and authorizations are managed",
+    "description": "Implement least privilege and separation of duties",
+    "references": ["CIS CSC 14", "ISO 27001 A.9.2.3"]
+  },
+  "PR.AC-5": {
+    "id": "PR.AC-5",
+    "function": "Protect",
+    "category": "Identity Management, Authentication and Access Control",
+    "subcategory": "Network integrity is protected",
+    "description": "Implement network segmentation and access controls",
+    "references": ["CIS CSC 12", "ISO 27001 A.13.1.1"]
+  },
+  "PR.AC-7": {
+    "id": "PR.AC-7",
+    "function": "Protect",
+    "category": "Identity Management, Authentication and Access Control",
+    "subcategory": "Users, devices, and other assets are authenticated",
+    "description": "Implement multi-factor authentication",
+    "references": ["CIS CSC 16", "ISO 27001 A.9.4.2"]
+  },
+  "PR.DS-1": {
+    "id": "PR.DS-1",
+    "function": "Protect",
+    "category": "Data Security",
+    "subcategory": "Data-at-rest is protected",
+    "description": "Encrypt data at rest using strong encryption",
+    "references": ["CIS CSC 13", "ISO 27001 A.10.1.1"]
+  },
+  "PR.DS-2": {
+    "id": "PR.DS-2",
+    "function": "Protect",
+    "category": "Data Security",
+    "subcategory": "Data-in-transit is protected",
+    "description": "Encrypt data in transit using TLS/SSL",
+    "references": ["CIS CSC 13", "ISO 27001 A.13.1.1"]
+  },
+  "PR.DS-5": {
+    "id": "PR.DS-5",
+    "function": "Protect",
+    "category": "Data Security",
+    "subcategory": "Protections against data leaks are implemented",
+    "description": "Implement data loss prevention controls",
+    "references": ["CIS CSC 13", "ISO 27001 A.13.1.3"]
+  },
+  "PR.DS-6": {
+    "id": "PR.DS-6",
+    "function": "Protect",
+    "category": "Data Security",
+    "subcategory": "Integrity checking mechanisms are used to verify data integrity",
+    "description": "Enable log file validation and integrity checking",
+    "references": ["CIS CSC 14", "ISO 27001 A.12.4.2"]
+  },
+  "PR.IP-1": {
+    "id": "PR.IP-1",
+    "function": "Protect",
+    "category": "Information Protection Processes and Procedures",
+    "subcategory": "A baseline configuration of information technology is created and maintained",
+    "description": "Maintain secure baseline configurations",
+    "references": ["CIS CSC 5", "ISO 27001 A.12.1.4"]
+  },
+  "PR.IP-2": {
+    "id": "PR.IP-2",
+    "function": "Protect",
+    "category": "Information Protection Processes and Procedures",
+    "subcategory": "A System Development Life Cycle to manage systems is implemented",
+    "description": "Implement lifecycle management for resources",
+    "references": ["CIS CSC 18", "ISO 27001 A.8.3.3"]
+  },
+  "PR.IP-3": {
+    "id": "PR.IP-3",
+    "function": "Protect",
+    "category": "Information Protection Processes and Procedures",
+    "subcategory": "Configuration change control processes are in place",
+    "description": "Enable change control and termination protection",
+    "references": ["CIS CSC 5", "ISO 27001 A.12.1.2"]
+  },
+  "PR.IP-4": {
+    "id": "PR.IP-4",
+    "function": "Protect",
+    "category": "Information Protection Processes and Procedures",
+    "subcategory": "Backups of information are conducted, maintained, and tested",
+    "description": "Implement automated backup and recovery",
+    "references": ["CIS CSC 10", "ISO 27001 A.12.3.1"]
+  },
+  "DE.AE-3": {
+    "id": "DE.AE-3",
+    "function": "Detect",
+    "category": "Anomalies and Events",
+    "subcategory": "Event data are collected and correlated from multiple sources",
+    "description": "Enable comprehensive logging and monitoring",
+    "references": ["CIS CSC 6", "ISO 27001 A.12.4.1"]
+  },
+  "DE.CM-1": {
+    "id": "DE.CM-1",
+    "function": "Detect",
+    "category": "Security Continuous Monitoring",
+    "subcategory": "The network is monitored to detect potential cybersecurity events",
+    "description": "Enable threat detection and continuous monitoring",
+    "references": ["CIS CSC 13", "ISO 27001 A.12.6.1"]
+  },
+  "RS.AN-1": {
+    "id": "RS.AN-1",
+    "function": "Respond",
+    "category": "Analysis",
+    "subcategory": "Notifications from detection systems are investigated",
+    "description": "Investigate and respond to security findings",
+    "references": ["CIS CSC 19", "ISO 27001 A.16.1.1"]
+  }
+}
