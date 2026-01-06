@@ -1,7 +1,5 @@
-from boto3.session import Session
 import logging
 from concurrent.futures import ThreadPoolExecutor
-import traceback
 from threading import Lock
 
 from scanner.aws.s3 import *
@@ -288,6 +286,7 @@ SCANS = {
 
 
 def run_scans(selected_services, access_key, secret_key, region, max_workers=16):
+    from boto3.session import Session  # Import moved here to avoid eager loading
 
     session = Session(
         aws_access_key_id=access_key,
